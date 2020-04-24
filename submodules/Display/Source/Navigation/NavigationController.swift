@@ -1067,6 +1067,7 @@ open class NavigationController: UINavigationController, ContainableController, 
     open override func pushViewController(_ viewController: UIViewController, animated: Bool) {
         var controllers = self.viewControllers
         controllers.append(viewController)
+      telegramDisplayLog("\(viewController)")
         self.setViewControllers(controllers, animated: animated)
     }
     
@@ -1075,6 +1076,7 @@ open class NavigationController: UINavigationController, ContainableController, 
         var controllers = self.viewControllers
         controllers.removeLast()
         controllers.append(controller)
+      telegramDisplayLog("\(controller)")
         self.setViewControllers(controllers, animated: animated)
     }
     
@@ -1085,6 +1087,7 @@ open class NavigationController: UINavigationController, ContainableController, 
                 self.ignoreInputHeight = true
             }
             self.setViewControllers(controllers, animated: animated)
+          telegramDisplayLog("\(controller)")
             self.ignoreInputHeight = false
         }
     }
@@ -1097,6 +1100,9 @@ open class NavigationController: UINavigationController, ContainableController, 
                 break
             }
         }
+
+      telegramDisplayLog("\(controller)")
+
         self.setViewControllers(controllers, animated: animated)
     }
     
@@ -1105,6 +1111,7 @@ open class NavigationController: UINavigationController, ContainableController, 
         var controllers = controllers
         controllers.append(controller)
         self.setViewControllers(controllers, animated: animated)
+      telegramDisplayLog("controllers: \(controllers), push \(controller)")
         completion()
     }
     
@@ -1116,6 +1123,7 @@ open class NavigationController: UINavigationController, ContainableController, 
         }
         controllers.append(controller)
         self.setViewControllers(controllers, animated: animated)
+      telegramDisplayLog("\(controller)")
         completion()
     }
 
@@ -1124,6 +1132,9 @@ open class NavigationController: UINavigationController, ContainableController, 
         while controllers.count > 1 {
             controllers.removeLast()
         }
+
+      telegramDisplayLog("")
+
         self.setViewControllers(controllers, animated: animated)
     }
     
@@ -1131,6 +1142,9 @@ open class NavigationController: UINavigationController, ContainableController, 
         var poppedControllers: [UIViewController] = []
         var found = false
         var controllers = self.viewControllers
+
+      telegramDisplayLog("\(viewController)")
+
         if !controllers.contains(where: { $0 === viewController }) {
             return nil
         }
@@ -1156,6 +1170,7 @@ open class NavigationController: UINavigationController, ContainableController, 
         if controllers.count != 0 {
             controller = controllers[controllers.count - 1] as UIViewController
             controllers.remove(at: controllers.count - 1)
+          telegramDisplayLog("\(controller)")
             self.setViewControllers(controllers, animated: animated)
         }
         return controller
@@ -1167,12 +1182,17 @@ open class NavigationController: UINavigationController, ContainableController, 
             controller.navigation_setNavigationController(self)
             return controller
         }
+
+      telegramDisplayLog("\(viewControllers)")
+
         if let layout = self.validLayout {
             self.updateContainers(layout: layout, transition: animated ? .animated(duration: 0.5, curve: .spring) : .immediate)
         }
     }
     
     public func presentOverlay(controller: ViewController, inGlobal: Bool = false, blockInteraction: Bool = false) {
+      telegramDisplayLog("\(controller)")
+
         let container = NavigationOverlayContainer(controller: controller, blocksInteractionUntilReady: blockInteraction, controllerRemoved: { [weak self] controller in
             guard let strongSelf = self else {
                 return
@@ -1264,10 +1284,12 @@ open class NavigationController: UINavigationController, ContainableController, 
     }
     
     override open func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)? = nil) {
+      telegramDisplayLog("\(viewControllerToPresent)")
         preconditionFailure()
     }
     
     override open func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+      telegramDisplayLog("")
         if let controller = self.presentedViewController {
             if flag {
                 UIView.animate(withDuration: 0.3, delay: 0.0, options: UIView.AnimationOptions(rawValue: 7 << 16), animations: {

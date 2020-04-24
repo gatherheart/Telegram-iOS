@@ -43,12 +43,12 @@ public func trace1(_ domain: String, what: @autoclosure() -> String) {
 }
 
 public func registerLoggingFunctions() {
-    setBridgingTraceFunction({ domain, what in
+    setBridgingTraceFunction({ domain, what, fileName, functionName, lineNumber in
         if let what = what {
             if let domain = domain {
-                Logger.shared.log(domain, what as String)
+              Logger.shared.log(domain, what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
             } else {
-                Logger.shared.log("", what as String)
+              Logger.shared.log("", what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
             }
         }
     })
@@ -235,7 +235,7 @@ public final class Logger {
         }
     }
     
-    public func log(_ tag: String, _ what: @autoclosure () -> String) {
+    public func log(_ tag: String, _ what: @autoclosure () -> String, fileName: String = #file, functionName: String = #function, lineNumber: Int = #line) {
         if !self.logToFile && !self.logToConsole {
             return
         }
@@ -253,7 +253,7 @@ public final class Logger {
         
         var consoleContent: String?
         if self.logToConsole {
-            let content = String(format: "[%@] %d-%d-%d %02d:%02d:%02d.%03d %@", arguments: [tag, Int(timeinfo.tm_year) + 1900, Int(timeinfo.tm_mon + 1), Int(timeinfo.tm_mday), Int(timeinfo.tm_hour), Int(timeinfo.tm_min), Int(timeinfo.tm_sec), Int(milliseconds), string])
+            let content = String(format: "%d-%d-%d %02d:%02d:%02d.%03d [%@][%@:%d %@] %@", arguments: [Int(timeinfo.tm_year) + 1900, Int(timeinfo.tm_mon + 1), Int(timeinfo.tm_mday), Int(timeinfo.tm_hour), Int(timeinfo.tm_min), Int(timeinfo.tm_sec), Int(milliseconds), tag, (fileName as NSString).lastPathComponent, lineNumber, functionName, string])
             consoleContent = content
             print(content)
         }
