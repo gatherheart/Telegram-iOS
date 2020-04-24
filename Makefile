@@ -63,6 +63,9 @@ BAZEL_OPT_FLAGS=\
 	--swiftcopt=-whole-module-optimization \
 	--swiftcopt='-num-threads' --swiftcopt='16' \
 
+query_dot: check_env
+	$(BUCK) query \
+	"deps('//Telegram:Telegram', 2)" ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS} --output-format dot_bfs --output-file dependency_bfs.dot
 
 build_arm64: check_env
 	$(BUCK) build \
