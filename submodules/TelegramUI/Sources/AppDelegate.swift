@@ -243,10 +243,10 @@ final class SharedApplicationContext {
         precondition(!testIsLaunched)
         testIsLaunched = true
 
-      setTelegramDisplayLogger({ what, fileName, functionName, lineNumber in
-        Logger.shared.log("Display", what as String, fileName:fileName, functionName:functionName, lineNumber:lineNumber)
-          Logger.shared.shortLog("Display", what as String)
-      })
+        setTelegramDisplayLogger({ what, fileName, functionName, lineNumber in
+            Logger.shared.log("Display", what as String, fileName:fileName, functionName:functionName, lineNumber:lineNumber)
+            Logger.shared.shortLog("Display", what as String)
+        })
         
         let _ = voipTokenPromise.get().start(next: { token in
             self.deviceToken.set(.single(token))

@@ -253,9 +253,27 @@ public final class Logger {
         
         var consoleContent: String?
         if self.logToConsole {
-            let content = String(format: "%d-%d-%d %02d:%02d:%02d.%03d [%@][%@:%d %@] %@", arguments: [Int(timeinfo.tm_year) + 1900, Int(timeinfo.tm_mon + 1), Int(timeinfo.tm_mday), Int(timeinfo.tm_hour), Int(timeinfo.tm_min), Int(timeinfo.tm_sec), Int(milliseconds), tag, (fileName as NSString).lastPathComponent, lineNumber, functionName, string])
-            consoleContent = content
-            print(content)
+          var thread = ""
+          if let name = Thread.current.name {
+            thread = name
+          }
+          if thread.count == 0 {
+            thread = "\(Unmanaged.passUnretained(Thread.current).toOpaque())"
+            if thread.count > 4 {
+              thread = String(thread.suffix(4))
+            }
+          }
+          
+          let timestamp = String(format:"%d-%d-%d %02d:%02d:%02d.%03d", [Int(timeinfo.tm_year) + 1900,
+                                                                         Int(timeinfo.tm_mon + 1),
+                                                                         Int(timeinfo.tm_mday),
+                                                                         Int(timeinfo.tm_hour),
+                                                                         Int(timeinfo.tm_min),
+                                                                         Int(timeinfo.tm_sec),
+                                                                         Int(milliseconds)])
+          let content = "\(timestamp) [\(thread)][\(tag)][\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)] \(string)"
+          consoleContent = content
+          print(content)
         }
         
         if self.logToFile {
