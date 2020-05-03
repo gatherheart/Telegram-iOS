@@ -65,7 +65,7 @@ BAZEL_OPT_FLAGS=\
 
 query_dot: check_env
 	$(BUCK) query \
-	"deps('//Telegram:Telegram', 2)" ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS} --output-format dot_bfs --output-file dependency_bfs.dot
+	"deps('//Telegram:Telegram', 3)" ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS} --output-format dot_bfs --output-file dependency_bfs.dot
 
 build_arm64: check_env
 	$(BUCK) build \
