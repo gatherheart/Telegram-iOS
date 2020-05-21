@@ -26,6 +26,7 @@ static NSData *base64_decode(NSString *str) {
     }
 }
 
+//XXX_hb
 @implementation MTBackupAddressSignals
 
 + (bool)checkIpData:(MTBackupDatacenterData *)data timestamp:(int32_t)timestamp source:(NSString *)source {

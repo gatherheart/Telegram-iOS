@@ -402,8 +402,8 @@ public struct NetworkInitializationArguments {
     public let apiHash: String
     public let languagesCategory: String
     public let appVersion: String
-    public let voipMaxLayer: Int32
-    public let voipVersions: [String]
+    public let voipMaxLayer: Int32 // XXX_hb
+    public let voipVersions: [String] // XXX_hb
     public let appData: Signal<Data?, NoError>
     public let autolockDeadine: Signal<Int32?, NoError>
     public let encryptionProvider: EncryptionProvider
@@ -515,6 +515,7 @@ func initializedNetwork(arguments: NetworkInitializationArguments, supplementary
                 }
             }
             #endif
+            // XXX_hb
             context.setDiscoverBackupAddressListSignal(MTBackupAddressSignals.fetchBackupIps(testingEnvironment, currentContext: context, additionalSource: wrappedAdditionalSource, phoneNumber: phoneNumber))
             
             #if DEBUG

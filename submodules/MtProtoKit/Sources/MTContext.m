@@ -120,40 +120,40 @@
     
     NSTimeInterval _globalTimeDifference;
     
-    NSMutableDictionary *_datacenterSeedAddressSetById;
-    NSMutableDictionary *_datacenterAddressSetById;
+    NSMutableDictionary<NSNumber *, MTDatacenterAddressSet *> *_datacenterSeedAddressSetById;
+    NSMutableDictionary<NSNumber *, MTDatacenterAddressSet *> *_datacenterAddressSetById;
     NSMutableDictionary<MTTransportSchemeKey *, MTTransportScheme *> *_datacenterManuallySelectedSchemeById;
     
     NSMutableDictionary<NSNumber *, NSMutableDictionary<MTDatacenterAddress *, MTTransportSchemeStats *> *> *_transportSchemeStats;
     MTTimer *_schemeStatsSyncTimer;
     
-    NSMutableDictionary *_datacenterAuthInfoById;
+    NSMutableDictionary<NSNumber *, MTDatacenterAuthInfo *> *_datacenterAuthInfoById;
     
-    NSMutableDictionary *_datacenterPublicKeysById;
+    NSMutableDictionary<NSNumber *, NSArray<NSDictionary *> *> *_datacenterPublicKeysById;
     
-    NSMutableDictionary *_authTokenById;
+    NSMutableDictionary<NSNumber *, id> *_authTokenById;
     
-    NSMutableArray *_changeListeners;
+    NSMutableArray<id<MTContextChangeListener>> *_changeListeners;
     
     MTSignal *_discoverBackupAddressListSignal;
     
-    NSMutableDictionary *_discoverDatacenterAddressActions;
-    NSMutableDictionary *_datacenterAuthActions;
-    NSMutableDictionary *_datacenterTempAuthActions;
-    NSMutableDictionary *_datacenterTransferAuthActions;
+    NSMutableDictionary<NSNumber *, MTDiscoverDatacenterAddressAction *> *_discoverDatacenterAddressActions;
+    NSMutableDictionary<NSNumber *, MTDatacenterAuthAction *> *_datacenterAuthActions;
+    NSMutableDictionary<NSNumber *, MTDatacenterAuthAction *> *_datacenterTempAuthActions;
+    NSMutableDictionary<NSNumber *, MTDatacenterTransferAuthAction *> *_datacenterTransferAuthActions;
     
     NSMutableDictionary<NSNumber *, NSNumber *> *_datacenterCheckKeyRemovedActionTimestamps;
     NSMutableDictionary<NSNumber *, id<MTDisposable> > *_datacenterCheckKeyRemovedActions;
     
-    NSMutableDictionary *_cleanupSessionIdsByAuthKeyId;
-    NSMutableArray *_currentSessionInfos;
+    NSMutableDictionary<NSNumber *, NSMutableArray *> *_cleanupSessionIdsByAuthKeyId;
+    NSMutableArray<MTSessionInfo *> *_currentSessionInfos;
     
     NSMutableDictionary *_periodicTasksTimerByDatacenterId;
     
     volatile OSSpinLock _passwordEntryRequiredLock;
-    NSMutableDictionary *_passwordRequiredByDatacenterId;
+    NSMutableDictionary<NSNumber *, NSNumber *> *_passwordRequiredByDatacenterId;
     
-    NSMutableDictionary *_transportSchemeDisposableByDatacenterId;
+    NSMutableDictionary<NSNumber *, id<MTDisposable>> *_transportSchemeDisposableByDatacenterId;
     id<MTDisposable> _backupAddressListDisposable;
     
     NSMutableDictionary<NSNumber *, id<MTDisposable> > *_fetchPublicKeysActions;
@@ -1059,10 +1059,10 @@ static int32_t fixedTimeDifferenceValue = 0;
                 }
             } error:^(id error)
             {
-                
+
             } completed:^
             {
-                
+
             }];
         }
     }];
