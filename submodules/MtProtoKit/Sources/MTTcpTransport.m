@@ -111,11 +111,16 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
             transportContext.proxySettings = context.apiEnvironment.socksProxySettings;
         }];
     }
+    
+    MTLog(@"MTTcpTransport#%p@%p new instance, datacenterId %@, schemes %@", self, _context, @(_datacenterId), schemes);
+    
     return self;
 }
 
 - (void)dealloc
 {
+    MTLog(@"MTTcpTransport#%p@%p deallocating, datacenterId %@", self, _context, @(_datacenterId));
+    
     MTTcpTransportContext *transportContext = _transportContext;
     [[MTTcpTransport tcpTransportQueue] dispatchOnQueue:^{
         transportContext.connection.delegate = nil;
@@ -192,6 +197,7 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
         {
             MTContext *context = _context;
             MTTransportScheme *scheme = [context chooseTransportSchemeForConnectionToDatacenterId:_datacenterId schemes:transportContext.schemes];
+            MTLog(@"MTTcpTransport#%p@%p starting, datacenterId %@, scheme %@", self, _context, @(_datacenterId), scheme);
             if (scheme != nil) {
                 [self startConnectionWatchdogTimer:scheme];
                 [self startSleepWatchdogTimer];
@@ -209,6 +215,7 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
     MTTcpTransportContext *transportContext = _transportContext;
     [[MTTcpTransport tcpTransportQueue] dispatchOnQueue:^
     {
+        MTLog(@"MTTcpTransport#%p@%p reset, datacenterId %@", self, _context, @(_datacenterId));
         [transportContext.connection stop];
     }];
 }
@@ -218,6 +225,8 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
     MTTcpTransportContext *transportContext = _transportContext;
     [[MTTcpTransport tcpTransportQueue] dispatchOnQueue:^
     {
+        MTLog(@"MTTcpTransport#%p@%p stopping, datacenterId %@", self, _context, @(_datacenterId));
+        
         [self activeTransactionIds:^(NSArray *activeTransactionId)
         {
             id<MTTransportDelegate> delegate = self.delegate;
@@ -399,8 +408,12 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
     MTTcpTransportContext *transportContext = _transportContext;
     [[MTTcpTransport tcpTransportQueue] dispatchOnQueue:^
     {
-        if (transportContext.connection != connection)
+        if (transportContext.connection != connection) {
+            MTLog(@"MTTcpTransport#%p@%p connection opened but is inconsistent, datacenterId %@", self, _context, @(_datacenterId));
             return;
+        }
+        
+        MTLog(@"MTTcpTransport#%p@%p connection opened, datacenterId %@", self, _context, @(_datacenterId));
         
         transportContext.connectionConnected = true;
         transportContext.connectionIsValid = false;
@@ -422,8 +435,12 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
     MTTcpTransportContext *transportContext = _transportContext;
     [[MTTcpTransport tcpTransportQueue] dispatchOnQueue:^
     {
-        if (transportContext.connection != connection)
+        if (transportContext.connection != connection) {
+            MTLog(@"MTTcpTransport#%p@%p connection closed but is inconsistent, datacenterId %@", self, _context, @(_datacenterId));
             return;
+        }
+        
+        MTLog(@"MTTcpTransport#%p@%p connection closed, datacenterId %@", self, _context, @(_datacenterId));
         
         transportContext.connectionConnected = false;
         transportContext.connectionIsValid = false;

@@ -4,6 +4,8 @@
 #import <MtProtoKit/MTDisposable.h>
 #import <MtProtoKit/MTSignal.h>
 
+#import <MtProtoKit/MTLogging.h>
+
 @implementation MTHttpResponse
 
 - (instancetype)initWithHeaders:(NSDictionary *)headers data:(NSData *)data {
@@ -25,6 +27,8 @@
 
 + (MTSignal *)dataForHttpUrl:(NSURL *)url headers:(NSDictionary *)headers {
     return [[MTSignal alloc] initWithGenerator:^id<MTDisposable>(MTSubscriber *subscriber) {
+        MTLog(@"new request to %@, headers %@", url, headers);
+        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
         [headers enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, __unused BOOL *stop) {
             [request setValue:value forHTTPHeaderField:key];

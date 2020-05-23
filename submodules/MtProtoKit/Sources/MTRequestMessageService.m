@@ -62,11 +62,16 @@
         _requests = [[NSMutableArray alloc] init];
         _dropReponseContexts = [[NSMutableArray alloc] init];
     }
+    
+    MTLog(@"MTRequestMessageService#%p@%p new instance", self, _context);
+    
     return self;
 }
 
 - (void)dealloc
 {
+    MTLog(@"MTRequestMessageService#%p@%p dealloc", self, _context);
+    
     if (_requestsServiceTimer != nil)
     {
         [_requestsServiceTimer invalidate];
@@ -84,6 +89,7 @@
         
         if (![_requests containsObject:request])
         {
+            MTLog(@"MTRequestMessageService#%p@%p add request: %@", self, _context, request);
             [_requests addObject:request];
             [mtProto requestTransportTransaction];
         }
@@ -117,7 +123,7 @@
                 
                 if (request.requestContext.messageId != 0) {
                     if (MTLogEnabled()) {
-                        MTLog(@"[MTRequestMessageService#%x drop %" PRId64 "]", (int)self, request.requestContext.messageId);
+                        MTLog(@"[MTRequestMessageService#%p@%p drop %" PRId64 "]", self, _context, request.requestContext.messageId);
                     }
                 }
                 
@@ -260,12 +266,16 @@
 
 - (void)mtProtoDidAddService:(MTProto *)mtProto
 {
+    MTLog(@"MTRequestMessageService#%p@%p, proto %p", self, _context, mtProto);
+    
     _mtProto = mtProto;
     _serialization = mtProto.context.serialization;
     _apiEnvironment = mtProto.apiEnvironment;
 }
     
 - (void)mtProtoApiEnvironmentUpdated:(MTProto *)mtProto apiEnvironment:(MTApiEnvironment *)apiEnvironment {
+    MTLog(@"MTRequestMessageService#%p@%p", self, _context);
+    
     bool updateApiInitialization = ![_apiEnvironment.apiInitializationHash isEqualToString:apiEnvironment.apiInitializationHash];
     
     _apiEnvironment = apiEnvironment;
@@ -783,8 +793,10 @@
     {
         if (request.requestContext != nil && request.requestContext.quickAckId == quickAckId)
         {
-            if (request.acknowledgementReceived != nil)
+            if (request.acknowledgementReceived != nil) {
                 request.acknowledgementReceived();
+                MTLog(@"MTRequestMessageService#%p@%p quick ack: %@", self, _context, @(quickAckId));
+            }
         }
     }
 }
@@ -805,10 +817,14 @@
             }
         }
     }
+    
+    MTLog(@"MTRequestMessageService#%p@%p delivery confirmed %@", self, _context, messageIds);
 }
 
 - (void)mtProto:(MTProto *)mtProto messageDeliveryFailed:(int64_t)messageId
 {
+    MTLog(@"MTRequestMessageService#%p@%p delivery failed %@", self, _context, @(messageId));
+    
     bool requestTransaction = false;
     
     for (MTRequest *request in _requests)
@@ -840,6 +856,8 @@
 
 - (void)mtProto:(MTProto *)mtProto transactionsMayHaveFailed:(NSArray *)transactionIds
 {
+    MTLog(@"MTRequestMessageService#%p@%p transactions may have failed %@", self, _context, transactionIds);
+    
     bool requestTransaction = false;
     
     for (MTRequest *request in _requests)
@@ -858,6 +876,8 @@
 
 - (void)mtProtoAllTransactionsMayHaveFailed:(MTProto *)mtProto
 {
+    MTLog(@"MTRequestMessageService#%p@%p", self, _context);
+    
     bool requestTransaction = false;
     
     for (MTRequest *request in _requests)
@@ -884,8 +904,8 @@
                 request.requestContext.responseMessageId = responseMessageId;
                 return true;
             } else {
-                MTLog(@"[MTRequestMessageService#%x will not request message %" PRId64 " (transaction was not completed)]", (int)self, messageId);
-                MTLog(@"[MTRequestMessageService#%x but today it will]", (int)self);
+                MTLog(@"[MTRequestMessageService#%p will not request message %" PRId64 " (transaction was not completed)]", self, messageId);
+                MTLog(@"[MTRequestMessageService#%p but today it will]", self);
                 return true;
             }
         }
@@ -896,6 +916,8 @@
 
 - (void)mtProto:(MTProto *)mtProto messageResendRequestFailed:(int64_t)messageId
 {
+    MTLog(@"MTRequestMessageService#%p@%p resend failed %@", self, _context, @(messageId));
+    
     bool requestTransaction = false;
     
     for (MTRequest *request in _requests)
@@ -913,6 +935,8 @@
 
 - (void)mtProto:(MTProto *)mtProto updateReceiveProgressForToken:(id)progressToken progress:(float)progress packetLength:(NSInteger)packetLength
 {
+    MTLog(@"MTRequestMessageService#%p@%p", self, _context);
+    
     if ([progressToken respondsToSelector:@selector(longLongValue)])
     {
         int64_t messageId = [(NSNumber *)progressToken longLongValue];
@@ -927,6 +951,8 @@
 
 - (void)mtProtoDidChangeSession:(MTProto *)mtProto
 {
+    MTLog(@"MTRequestMessageService#%p@%p", self, _context);
+    
     for (MTRequest *request in _requests)
     {
         request.requestContext = nil;
@@ -940,6 +966,8 @@
 
 - (void)mtProtoServerDidChangeSession:(MTProto *)mtProto firstValidMessageId:(int64_t)firstValidMessageId otherValidMessageIds:(NSArray *)otherValidMessageIds
 {
+    MTLog(@"MTRequestMessageService#%p@%p firstValidMessageId %@, other %@", self, _context, @(firstValidMessageId), otherValidMessageIds);
+    
     bool resendSomeRequests = false;
     for (MTRequest *request in _requests)
     {
@@ -957,6 +985,8 @@
 
 - (void)mtProtoAuthTokenUpdated:(MTProto *)mtProto
 {
+    MTLog(@"MTRequestMessageService#%p@%p", self, _context);
+    
     bool resendSomeRequests = false;
     for (MTRequest *request in _requests)
     {

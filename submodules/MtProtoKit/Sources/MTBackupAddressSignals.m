@@ -40,6 +40,8 @@ static NSData *base64_decode(NSString *str) {
 }
 
 + (MTSignal *)fetchBackupIpsResolveGoogle:(bool)isTesting phoneNumber:(NSString *)phoneNumber currentContext:(MTContext *)currentContext addressOverride:(NSString *)addressOverride {
+    MTLog(@"resolving from Google, is Testing %@, phoneNumber %@, context %p", @(isTesting), phoneNumber, currentContext);
+    
     NSArray *hosts = @[
         @[@"dns.google.com", @""],
         @[@"www.google.com", @"dns.google.com"],
@@ -141,6 +143,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal *)fetchBackupIpsResolveCloudflare:(bool)isTesting phoneNumber:(NSString *)phoneNumber currentContext:(MTContext *)currentContext addressOverride:(NSString *)addressOverride {
+    MTLog(@"resolving from Cloudflare, is Testing %@, phoneNumber %@, context %p", @(isTesting), phoneNumber, currentContext);
+    
     id<EncryptionProvider> encryptionProvider = currentContext.encryptionProvider;
     
     NSArray *hosts = @[
@@ -225,6 +229,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal *)fetchConfigFromAddress:(MTBackupDatacenterAddress *)address currentContext:(MTContext *)currentContext {
+    MTLog(@"fetch config from address %@, context %p", address, currentContext);
+    
     MTApiEnvironment *apiEnvironment = [currentContext.apiEnvironment copy];
     
     apiEnvironment = [apiEnvironment withUpdatedSocksProxySettings:nil];
@@ -302,6 +308,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal * _Nonnull)fetchBackupIps:(bool)isTestingEnvironment currentContext:(MTContext * _Nonnull)currentContext additionalSource:(MTSignal * _Nullable)additionalSource phoneNumber:(NSString * _Nullable)phoneNumber {
+    MTLog(@"isTesting %@, context %p, phoneNumber %@", @(isTestingEnvironment), currentContext, phoneNumber);
+    
     NSMutableArray *signals = [[NSMutableArray alloc] init];
     [signals addObject:[self fetchBackupIpsResolveGoogle:isTestingEnvironment phoneNumber:phoneNumber currentContext:currentContext addressOverride:currentContext.apiEnvironment.accessHostOverride]];
     [signals addObject:[self fetchBackupIpsResolveCloudflare:isTestingEnvironment phoneNumber:phoneNumber currentContext:currentContext addressOverride:currentContext.apiEnvironment.accessHostOverride]];

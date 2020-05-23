@@ -387,11 +387,11 @@ static int32_t fixedTimeDifferenceValue = 0;
                 _cleanupSessionIdsByAuthKeyId = [[NSMutableDictionary alloc] initWithDictionary:cleanupSessionIdsByAuthKeyId];
             
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: received keychain globalTimeDifference:%f datacenterAuthInfoById:%@]", (int)self, _globalTimeDifference, _datacenterAuthInfoById);
+                MTLog(@"[MTContext#%p: received keychain globalTimeDifference:%f datacenterAuthInfoById:%@]", self, _globalTimeDifference, _datacenterAuthInfoById);
             }
         } else {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: received keychain nil]", (int)self);
+                MTLog(@"[MTContext#%p: received keychain nil]", self);
             }
         }
     }];
@@ -450,7 +450,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         _globalTimeDifference = globalTimeDifference;
         
         if (MTLogEnabled()) {
-            MTLog(@"[MTContext#%x: global time difference changed: %.1fs]", (int)self, globalTimeDifference);
+            MTLog(@"[MTContext#%p: global time difference changed: %.1fs]", self, globalTimeDifference);
         }
         
         [_keychain setObject:@(_globalTimeDifference) forKey:@"globalTimeDifference" group:@"temp"];
@@ -472,7 +472,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (addressSet != nil && datacenterId != 0)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: address set updated for %d]", (int)self, datacenterId);
+                MTLog(@"[MTContext#%p: address set updated for %d]", self, datacenterId);
             }
             
             bool updateSchemes = forceUpdateSchemes;
@@ -565,7 +565,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (updated)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: added address %@ for datacenter %d]", (int)self, address, datacenterId);
+                MTLog(@"[MTContext#%p: added address %@ for datacenter %d]", self, address, datacenterId);
             }
             
             _datacenterAddressSetById[@(datacenterId)] = addressSet;
@@ -589,7 +589,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (datacenterId != 0)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: auth info updated for %d to %@]", (int)self, datacenterId, authInfo);
+                MTLog(@"[MTContext#%p: auth info updated for %d to %@]", self, datacenterId, authInfo);
             }
             
             if (authInfo != nil) {
@@ -660,7 +660,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             NSArray *currentListeners = [[NSArray alloc] initWithArray:_changeListeners];
             
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%x: %@ transport scheme updated for %d: %@]", (int)self, media ? @"media" : @"generic", datacenterId, transportScheme);
+                MTLog(@"[MTContext#%p: %@ transport scheme updated for %d: %@]", self, media ? @"media" : @"generic", datacenterId, transportScheme);
             }
             
             for (id<MTContextChangeListener> listener in currentListeners) {

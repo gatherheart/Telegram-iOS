@@ -78,6 +78,9 @@
         _processedMessageIdsSet = [[NSMutableSet alloc] init];
         _containerMessagesMappingDict = [[NSMutableDictionary alloc] init];
     }
+    
+    MTLog(@"MTSessionInfo#%p@%p, new instance with sessionId %@", self, context, @(sessionId));
+    
     return self;
 }
 

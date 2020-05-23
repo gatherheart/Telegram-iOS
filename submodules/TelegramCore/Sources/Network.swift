@@ -425,6 +425,8 @@ private let cloudDataContext = Atomic<CloudDataContext?>(value: nil)
 #endif
 
 func initializedNetwork(arguments: NetworkInitializationArguments, supplementary: Bool, datacenterId: Int, keychain: Keychain, basePath: String, testingEnvironment: Bool, languageCode: String?, proxySettings: ProxySettings?, networkSettings: NetworkSettings?, phoneNumber: String?) -> Signal<Network, NoError> {
+    Logger.shared.log("Network", "supplementary \(supplementary), datacenterId \(datacenterId), basePath \(basePath), testing \(testingEnvironment), phoneNumber \(phoneNumber)")
+    
     return Signal { subscriber in
         let queue = Queue()
         queue.async {

@@ -2469,7 +2469,7 @@ enum GCDAsyncSocketConfig
             freeifaddrs(ifaddr);
             
             if (MTLogEnabled()) {
-                MTLog(@"Connection time: %f ms, interface: %@", (CFAbsoluteTimeGetCurrent() - startTime) * 1000.0f, isWifi ? @"Wifi" : @"WAN");
+                MTLog(@"GCDAsyncSocket#%p, Connection time: %f ms, interface: %@", self, (CFAbsoluteTimeGetCurrent() - startTime) * 1000.0f, isWifi ? @"Wifi" : @"WAN");
             }
             
 			dispatch_async(socketQueue, ^{ @autoreleasepool {

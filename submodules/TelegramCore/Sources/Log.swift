@@ -81,6 +81,9 @@ public final class Logger {
     private var file: (ManagedFile, Int)?
     private var shortFile: (ManagedFile, Int)?
     
+    private let filterLogByTag: Bool = true
+    private let tagWhiteList: Set = ["Network", "MT"]
+    
     public var logToFile: Bool = true {
         didSet {
             let oldEnabled = self.logToConsole || oldValue
@@ -240,6 +243,10 @@ public final class Logger {
             return
         }
         
+        if filterLogByTag && !tagWhiteList.contains(tag) {
+            return
+        }
+        
         let string = what()
         
         var rawTime = time_t()
@@ -264,14 +271,14 @@ public final class Logger {
             }
           }
           
-          let timestamp = String(format:"%d-%d-%d %02d:%02d:%02d.%03d", [Int(timeinfo.tm_year) + 1900,
+          let timestamp = String(format:"%d-%d-%d %02d:%02d:%02d.%03d", Int(timeinfo.tm_year) + 1900,
                                                                          Int(timeinfo.tm_mon + 1),
                                                                          Int(timeinfo.tm_mday),
                                                                          Int(timeinfo.tm_hour),
                                                                          Int(timeinfo.tm_min),
                                                                          Int(timeinfo.tm_sec),
-                                                                         Int(milliseconds)])
-          let content = "\(timestamp) [\(thread)][\(tag)][\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)] \(string)"
+                                                                         Int(milliseconds))
+          let content = "\(timestamp) [\(tag)][\(thread)][\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)]: \(string)"
           consoleContent = content
           print(content)
         }

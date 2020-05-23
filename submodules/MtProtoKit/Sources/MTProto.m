@@ -153,6 +153,9 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
         
         _shouldStayConnected = true;
     }
+    
+    MTLog(@"MTProto#%p@%p new instance, datacenterId %@", self, _context, @(datacenterId));
+    
     return self;
 }
 
@@ -218,7 +221,7 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
             
             [self setMtState:_mtState & (~MTProtoStatePaused)];
             
-            [self resetTransport];
+            [self resetTransport:@"resume"];
             [self requestTransportTransaction];
         }
     }];
@@ -307,10 +310,12 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
     }];
 }
 
-- (void)resetTransport
+- (void)resetTransport:(NSString *)hint
 {
     [[MTProto managerQueue] dispatchOnQueue:^
     {
+        MTLog(@"MTProto#%p@%p _mtState %@, transport %@", self, _context, @(_mtState & MTProtoStateStopped), _transport);
+        
         if (_mtState & MTProtoStateStopped)
             return;
         
@@ -396,7 +401,7 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
                 [messageService mtProtoDidChangeSession:self];
         }
         
-        [self resetTransport];
+        [self resetTransport:@"resetSessionInfo"];
         [self requestTransportTransaction];
     }];
 }
@@ -673,7 +678,7 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
                     return;
                 
                 if (_transport == nil)
-                    [self resetTransport];
+                    [self resetTransport:@"requestTransportTransaction"];
                 
                 [_transport setDelegateNeedsTransaction];
             });
@@ -863,7 +868,7 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
 
 - (NSString *)outgoingMessageDescription:(MTOutgoingMessage *)message messageId:(int64_t)messageId messageSeqNo:(int32_t)messageSeqNo
 {
-    return [[NSString alloc] initWithFormat:@"%@%@ (%" PRId64 "/%" PRId32 ")", message.metadata, message.additionalDebugDescription != nil ? message.additionalDebugDescription : @"", message.messageId == 0 ? messageId : message.messageId, message.messageSeqNo == 0 ? message.messageSeqNo : messageSeqNo];
+    return [[NSString alloc] initWithFormat:@"%@%@ (messageId %" PRId64 "/SeqNo %" PRId32 ")", message.metadata, message.additionalDebugDescription != nil ? message.additionalDebugDescription : @"", message.messageId == 0 ? messageId : message.messageId, message.messageSeqNo == 0 ? message.messageSeqNo : messageSeqNo];
 }
 
 - (NSString *)outgoingShortMessageDescription:(MTOutgoingMessage *)message messageId:(int64_t)messageId messageSeqNo:(int32_t)messageSeqNo
@@ -2715,7 +2720,7 @@ static NSString *dumpHexString(NSData *data, int maxLength) {
             }
             
             if (resolvedShouldReset) {
-                [self resetTransport];
+                [self resetTransport:[NSString stringWithFormat:@"contextDatacenterTransportSchemesUpdated datacenterId %@", @(datacenterId)]];
                 [self requestTransportTransaction];
             }
         }
@@ -2774,12 +2779,12 @@ static NSString *dumpHexString(NSData *data, int maxLength) {
             if (authInfo != nil) {
                 if ((_mtState & (MTProtoStateAwaitingDatacenterAuthorization | MTProtoStateAwaitingDatacenterTempAuthKey)) == 0) {
                     if (wasSuspended) {
-                        [self resetTransport];
+                        [self resetTransport:[NSString stringWithFormat:@"contextDatacenterAuthInfoUpdated datacenterId %@", @(datacenterId)]];
                         [self requestTransportTransaction];
                     }
                 }
             } else {
-                [self resetTransport];
+                [self resetTransport:[NSString stringWithFormat:@"contextDatacenterAuthInfoUpdated datacenterId %@", @(datacenterId)]];
             }
         }
     }];
@@ -2827,7 +2832,7 @@ static NSString *dumpHexString(NSData *data, int maxLength) {
             {
                 [self setMtState:_mtState & (~MTProtoStateAwaitingDatacenterAuthToken)];
                 
-                [self resetTransport];
+                [self resetTransport:[NSString stringWithFormat:@"contextDatacenterAuthTokenUpdated datacenterId %@", @(datacenterId)]];
                 [self requestTransportTransaction];
             }
             
@@ -2919,7 +2924,7 @@ static NSString *dumpHexString(NSData *data, int maxLength) {
         }
         
         if (resetConnection) {
-            [self resetTransport];
+            [self resetTransport:@"contextApiEnvironmentUpdated"];
             [self requestTransportTransaction];
         }
     }];

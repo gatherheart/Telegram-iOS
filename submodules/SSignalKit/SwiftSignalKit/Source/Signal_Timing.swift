@@ -1,11 +1,16 @@
 import Foundation
 
+public var global_address: Int = 0
+
 public func delay<T, E>(_ timeout: Double, queue: Queue) -> (_ signal: Signal<T, E>) -> Signal<T, E> {
+    global_address += 1
+    let address = global_address
     return { signal in
         return Signal<T, E> { subscriber in
             let disposable = MetaDisposable()
             queue.async {
                 let timer = Timer(timeout: timeout, repeat: false, completion: {
+                    //print("\(#file):\(#line) \(#function): fire timer \(timeout), \(address)")
                     disposable.set(signal.start(next: { next in
                         subscriber.putNext(next)
                     }, error: { error in
@@ -17,10 +22,12 @@ public func delay<T, E>(_ timeout: Double, queue: Queue) -> (_ signal: Signal<T,
                 
                 disposable.set(ActionDisposable {
                     queue.async {
+                        //print("\(#file):\(#line) \(#function): invalidate timer \(timeout), \(address)")
                         timer.invalidate()
                     }
                 })
                 
+                //print("\(#file):\(#line) \(#function): start timer \(timeout), \(address)")
                 timer.start()
             }
             return disposable
