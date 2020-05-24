@@ -40,7 +40,7 @@ public func sendAuthorizationCode(accountManager: AccountManager, account: Unaut
     }
     |> `catch` { error -> Signal<(Api.auth.SentCode, UnauthorizedAccount), MTRpcError> in
         switch (error.errorDescription ?? "") {
-            case Regex("(PHONE_|USER_|NETWORK_)MIGRATE_(\\d+)"):
+            case Regex("(PHONE_|USER_|NETWORK_)MIGRATE_(\\d+)"): //XXX_hb PHONE_MIGRATE_X errors
                 let range = error.errorDescription.range(of: "MIGRATE_")!
                 let updatedMasterDatacenterId = Int32(error.errorDescription[range.upperBound ..< error.errorDescription.endIndex])!
                 let updatedAccount = account.changedMasterDatacenterId(accountManager: accountManager, masterDatacenterId: updatedMasterDatacenterId)
