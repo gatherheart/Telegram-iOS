@@ -165,9 +165,13 @@ typedef enum {
     {
         _encryptionProvider = context.encryptionProvider;
         _tempAuth = tempAuth;
-        _sessionInfo = [[MTSessionInfo alloc] initWithRandomSessionIdAndContext:context];
+        _sessionInfo = [[MTSessionInfo alloc] initWithRandomSessionIdAndContext:context hint:[self description]];
     }
     return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTDatacenterAuthMessageService#%p(stage %@, _currentStageMessageId %@, _currentStageMessageSeqNo %@, _currentStageTransactionId %@)", self, @(_stage), @(_currentStageMessageId), @(_currentStageMessageSeqNo), _currentStageTransactionId];
 }
 
 - (void)reset:(MTProto *)mtProto

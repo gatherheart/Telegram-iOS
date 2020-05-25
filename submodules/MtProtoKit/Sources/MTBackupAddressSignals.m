@@ -229,7 +229,7 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal *)fetchConfigFromAddress:(MTBackupDatacenterAddress *)address currentContext:(MTContext *)currentContext {
-    MTLog(@"fetch config from address %@, context %p", address, currentContext);
+    MTLog(@"fetch config from address %@, current context %@", address, currentContext);
     
     MTApiEnvironment *apiEnvironment = [currentContext.apiEnvironment copy];
     
@@ -246,7 +246,7 @@ static NSString *makeRandomPadding() {
     apiEnvironment.disableUpdates = true;
     apiEnvironment.langPack = currentContext.apiEnvironment.langPack;
     
-    MTContext *context = [[MTContext alloc] initWithSerialization:currentContext.serialization encryptionProvider:currentContext.encryptionProvider apiEnvironment:apiEnvironment isTestingEnvironment:currentContext.isTestingEnvironment useTempAuthKeys:address.datacenterId != 0 ? currentContext.useTempAuthKeys : false];
+    MTContext *context = [[MTContext alloc] initWithSerialization:currentContext.serialization encryptionProvider:currentContext.encryptionProvider apiEnvironment:apiEnvironment isTestingEnvironment:currentContext.isTestingEnvironment useTempAuthKeys:address.datacenterId != 0 ? currentContext.useTempAuthKeys : false hint:[NSString stringWithFormat:@"fetchConfig from %@ for context %@", address, currentContext]];
     
     if (address.datacenterId != 0) {
         //context.keychain = currentContext.keychain;

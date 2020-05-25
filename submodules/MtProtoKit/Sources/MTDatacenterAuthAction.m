@@ -56,6 +56,8 @@
     _context = context;
     _isCdn = isCdn;
     
+    MTLog(@"datacenterId %@, context %p, isCdn %@", @(_datacenterId), _context, @(_isCdn));
+    
     if (_datacenterId != 0 && context != nil)
     {
         bool alreadyCompleted = false;

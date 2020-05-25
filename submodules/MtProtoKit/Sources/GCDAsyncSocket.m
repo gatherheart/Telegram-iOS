@@ -991,23 +991,25 @@ enum GCDAsyncSocketConfig
 
 - (id)init
 {
-	return [self initWithDelegate:nil delegateQueue:NULL socketQueue:NULL];
+	return [self initWithDelegate:nil delegateQueue:NULL socketQueue:NULL hint:nil];
 }
 
 - (id)initWithSocketQueue:(dispatch_queue_t)sq
 {
-	return [self initWithDelegate:nil delegateQueue:NULL socketQueue:sq];
+	return [self initWithDelegate:nil delegateQueue:NULL socketQueue:sq hint:nil];
 }
 
-- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq
+- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq hint:(NSString *)hint
 {
-	return [self initWithDelegate:aDelegate delegateQueue:dq socketQueue:NULL];
+    return [self initWithDelegate:aDelegate delegateQueue:dq socketQueue:NULL hint:hint];
 }
 
-- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq socketQueue:(dispatch_queue_t)sq
+- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq socketQueue:(dispatch_queue_t)sq hint:(NSString *)hint
 {
 	if((self = [super init]))
 	{
+        _hint = hint;
+        
 		delegate = aDelegate;
 		delegateQueue = dq;
 		
@@ -1046,12 +1048,21 @@ enum GCDAsyncSocketConfig
 		
 		preBuffer = [[GCDAsyncSocketPreBuffer alloc] initWithCapacity:(1024 * 4)];
 	}
+    
+    MTLog(@"%@ new instance", self);
+    
 	return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"GCDAsyncSocket#%p(%@%@, %@:%@, hint[%@])", self, @(self.isConnected), @(self.isDisconnected), self.connectedHost, @(self.connectedPort), _hint];
 }
 
 - (void)dealloc
 {
 	LogInfo(@"%@ - %@ (start)", THIS_METHOD, self);
+    
+    MTLog(@"%@ dealloc", self);
 
 	if (dispatch_get_current_queue() == socketQueue)
 	{
@@ -1798,7 +1809,7 @@ enum GCDAsyncSocketConfig
 			
 			GCDAsyncSocket *acceptedSocket = [[GCDAsyncSocket alloc] initWithDelegate:theDelegate
 			                                                            delegateQueue:delegateQueue
-			                                                              socketQueue:childSocketQueue];
+                                                                          socketQueue:childSocketQueue hint:@"doAccept"];
 			
 			if (isIPv4)
 				acceptedSocket->socket4FD = childSocketFD;
@@ -1967,6 +1978,8 @@ enum GCDAsyncSocketConfig
 	__block NSError *err = nil;
 	
 	dispatch_block_t block = ^{ @autoreleasepool {
+        
+        MTLog(@"%@ connect to host: %@:%@, via %@, timeout %@", self, host, @(port), interface, @(timeout));
 		
 		// Check for problems with host parameter
 		

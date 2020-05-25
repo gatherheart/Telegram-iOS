@@ -159,6 +159,8 @@
     NSMutableDictionary<NSNumber *, id<MTDisposable> > *_fetchPublicKeysActions;
     
     MTDisposableSet *_cleanupSessionInfoDisposables;
+    
+    NSString * _hint;
 }
 
 @end
@@ -185,7 +187,7 @@ static int32_t fixedTimeDifferenceValue = 0;
     return self;
 }
 
-- (instancetype)initWithSerialization:(id<MTSerialization>)serialization encryptionProvider:(id<EncryptionProvider>)encryptionProvider apiEnvironment:(MTApiEnvironment *)apiEnvironment isTestingEnvironment:(bool)isTestingEnvironment useTempAuthKeys:(bool)useTempAuthKeys
+- (instancetype)initWithSerialization:(id<MTSerialization>)serialization encryptionProvider:(id<EncryptionProvider>)encryptionProvider apiEnvironment:(MTApiEnvironment *)apiEnvironment isTestingEnvironment:(bool)isTestingEnvironment useTempAuthKeys:(bool)useTempAuthKeys hint:(NSString *)hint
 {
     NSAssert(serialization != nil, @"serialization should not be nil");
     NSAssert(apiEnvironment != nil, @"apiEnvironment should not be nil");
@@ -195,6 +197,8 @@ static int32_t fixedTimeDifferenceValue = 0;
     if (self != nil)
     {
         arc4random_buf(&_uniqueId, sizeof(_uniqueId));
+        
+        _hint = hint;
         
         _serialization = serialization;
         _encryptionProvider = encryptionProvider;
@@ -234,12 +238,20 @@ static int32_t fixedTimeDifferenceValue = 0;
         
         [self updatePeriodicTasks];
     }
+    
+    MTLog(@"%@ new instance", self);
+    
     return self;
 }
 
 - (void)dealloc
 {
+    MTLog(@"%@ dealloc", self);
     [self cleanup];
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTContext#%p(uniqueId %@, hint %@)", self, @(_uniqueId), _hint];
 }
 
 + (MTQueue *)contextQueue
@@ -589,7 +601,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (datacenterId != 0)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: auth info updated for %d to %@]", self, datacenterId, authInfo);
+                MTLog(@"%@: auth info updated for datacenterId %d to %@", self, datacenterId, authInfo);
             }
             
             if (authInfo != nil) {
@@ -828,7 +840,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             }];
         }
         if (MTLogEnabled()) {
-            MTLog(@"[MTContext has chosen a scheme for DC%d: %@]", datacenterId, schemeWithEarliestFailure);
+            MTLog(@"[MTContext has chosen a scheme for datacenterId %d: %@]", datacenterId, schemeWithEarliestFailure);
         }
         result = schemeWithEarliestFailure;
     } synchronous:true];

@@ -95,7 +95,7 @@
         MTPayloadData payloadData;
         NSData *data = [self payloadData:&payloadData context:context address:address];
         
-        MTTcpConnection *connection = [[MTTcpConnection alloc] initWithContext:context datacenterId:datacenterId scheme:[[MTTransportScheme alloc] initWithTransportClass:[MTTcpTransport class] address:address media:false] interface:nil usageCalculationInfo:nil];
+        MTTcpConnection *connection = [[MTTcpConnection alloc] initWithContext:context datacenterId:datacenterId scheme:[[MTTransportScheme alloc] initWithTransportClass:[MTTcpTransport class] address:address media:false] interface:nil usageCalculationInfo:nil hint:@"MTDiscoverConnectionSignals.tcpConnectionWithContext"];
         __weak MTTcpConnection *weakConnection = connection;
         connection.connectionOpened = ^
         {
@@ -150,6 +150,8 @@
 
 + (MTSignal *)discoverSchemeWithContext:(MTContext *)context datacenterId:(NSInteger)datacenterId addressList:(NSArray *)addressList media:(bool)media isProxy:(bool)isProxy
 {
+    MTLog(@"context %@, datacenterId %@, addressList %@ media %@", context, @(datacenterId), addressList, @(media));
+    
     NSMutableArray *bestAddressList = [[NSMutableArray alloc] init];
     
     for (MTDatacenterAddress *address in addressList)

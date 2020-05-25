@@ -67,6 +67,21 @@ public func registerLoggingFunctions() {
     })
 }
 
+public func toAddressString(_ a: AnyObject?, suffix: Int = 0) -> String {
+    let ret: String;
+    if let a = a {
+        ret = "\(Unmanaged.passUnretained(a).toOpaque())"
+    } else {
+        ret = "0"
+    }
+    
+    if suffix > 0 && ret.count > suffix {
+        return String(ret.suffix(suffix))
+    }
+    
+    return ret
+}
+
 private var sharedLogger: Logger?
 
 private let binaryEventMarker: UInt64 = 0xcadebabef00dcafe
@@ -265,10 +280,7 @@ public final class Logger {
             thread = name
           }
           if thread.count == 0 {
-            thread = "\(Unmanaged.passUnretained(Thread.current).toOpaque())"
-            if thread.count > 4 {
-              thread = String(thread.suffix(4))
-            }
+            thread = toAddressString(Thread.current, suffix: 4)
           }
           
           let timestamp = String(format:"%d-%d-%d %02d:%02d:%02d.%03d", Int(timeinfo.tm_year) + 1900,
@@ -278,7 +290,7 @@ public final class Logger {
                                                                          Int(timeinfo.tm_min),
                                                                          Int(timeinfo.tm_sec),
                                                                          Int(milliseconds))
-          let content = "\(timestamp) [\(tag)][\(thread)][\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)]: \(string)"
+            let content = "\(timestamp) (\(tag))(\(thread))(\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)): {\(string)}"
           consoleContent = content
           print(content)
         }

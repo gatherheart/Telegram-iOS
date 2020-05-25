@@ -146,6 +146,8 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 #endif
 	
 	id userData;
+    
+    NSString * _hint;
 }
 
 @property (nonatomic) bool useTcpNodelay;
@@ -167,8 +169,8 @@ typedef enum GCDAsyncSocketError GCDAsyncSocketError;
 **/
 - (id)init;
 - (id)initWithSocketQueue:(dispatch_queue_t)sq;
-- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq;
-- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq socketQueue:(dispatch_queue_t)sq;
+- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq hint:(NSString *)hint;
+- (id)initWithDelegate:(id)aDelegate delegateQueue:(dispatch_queue_t)dq socketQueue:(dispatch_queue_t)sq hint:(NSString *)hint;
 
 #pragma mark Configuration
 

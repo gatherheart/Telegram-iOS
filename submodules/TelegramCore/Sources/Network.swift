@@ -466,7 +466,7 @@ func initializedNetwork(arguments: NetworkInitializationArguments, supplementary
                 }
             }
             
-            let context = MTContext(serialization: serialization, encryptionProvider: arguments.encryptionProvider, apiEnvironment: apiEnvironment, isTestingEnvironment: testingEnvironment, useTempAuthKeys: false)!
+            let context = MTContext(serialization: serialization, encryptionProvider: arguments.encryptionProvider, apiEnvironment: apiEnvironment, isTestingEnvironment: testingEnvironment, useTempAuthKeys: false, hint: "initializedNetwork with datacenterId \(datacenterId), phoneNumber \(phoneNumber)")!
             
             let seedAddressList: [Int: [String]]
             
@@ -740,6 +740,9 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
         
         super.init()
         
+        let selfAddress = toAddressString(self)
+        Logger.shared.log("Network", "new instance #\(selfAddress), datacenterId \(datacenterId), context \(context), proto \(mtProto), basePath \(basePath)")
+        
         self.requestService.didReceiveSoftAuthResetError = { [weak self] in
             self?.didReceiveSoftAuthResetError?()
         }
@@ -823,6 +826,9 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     }
     
     deinit {
+        let selfAddress = toAddressString(self)
+        Logger.shared.log("Network", "dealloc #\(selfAddress)")
+        
         self.shouldKeepConnectionDisposable.dispose()
         self.appDataDisposable.dispose()
     }
