@@ -50,6 +50,8 @@
 @property (nonatomic, readonly) bool isTestingEnvironment;
 @property (nonatomic, readonly) bool useTempAuthKeys;
 
+@property (nonatomic, copy, readonly) NSString * hint;
+
 + (int32_t)fixedTimeDifference;
 + (void)setFixedTimeDifference:(int32_t)fixedTimeDifference;
 

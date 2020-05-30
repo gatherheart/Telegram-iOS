@@ -50,13 +50,17 @@
     [self cleanup];
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTDatacenterAuthAction#%p(context #%p, datacenterId %@, isCdn %@)", self, _context, @(_datacenterId), @(_isCdn)];
+}
+
 - (void)execute:(MTContext *)context datacenterId:(NSInteger)datacenterId isCdn:(bool)isCdn
 {
     _datacenterId = datacenterId;
     _context = context;
     _isCdn = isCdn;
     
-    MTLog(@"datacenterId %@, context %p, isCdn %@", @(_datacenterId), _context, @(_isCdn));
+    MTLog(@"%@ execute", self);
     
     if (_datacenterId != 0 && context != nil)
     {
@@ -75,7 +79,7 @@
         if (alreadyCompleted) {
             [self complete];
         } else {
-            _authMtProto = [[MTProto alloc] initWithContext:context datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+            _authMtProto = [[MTProto alloc] initWithContext:context datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"MTDatacenterAuthAction"]];
             _authMtProto.cdn = isCdn;
             _authMtProto.useUnauthorizedMode = true;
             if (_tempAuth) {
@@ -110,7 +114,7 @@
         MTContext *mainContext = _context;
         if (mainContext != nil) {
             if (_bindKey != nil) {
-                _bindMtProto = [[MTProto alloc] initWithContext:mainContext datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+                _bindMtProto = [[MTProto alloc] initWithContext:mainContext datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"completeWithAuthKey"];
                 _bindMtProto.cdn = false;
                 _bindMtProto.useUnauthorizedMode = false;
                 _bindMtProto.useTempAuthKeys = true;
@@ -160,12 +164,14 @@
 
 - (void)cancel
 {
+    MTLog(@"%@ cancel", self);
     [self cleanup];
     [self fail];
 }
 
 - (void)complete
 {
+    MTLog(@"%@ complete", self);
     id<MTDatacenterAuthActionDelegate> delegate = _delegate;
     if ([delegate respondsToSelector:@selector(datacenterAuthActionCompleted:)])
         [delegate datacenterAuthActionCompleted:self];
@@ -173,6 +179,7 @@
 
 - (void)fail
 {
+    MTLog(@"%@ fail", self);
     id<MTDatacenterAuthActionDelegate> delegate = _delegate;
     if ([delegate respondsToSelector:@selector(datacenterAuthActionCompleted:)])
         [delegate datacenterAuthActionCompleted:self];

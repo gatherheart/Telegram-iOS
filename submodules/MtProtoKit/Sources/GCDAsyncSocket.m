@@ -2482,7 +2482,7 @@ enum GCDAsyncSocketConfig
             freeifaddrs(ifaddr);
             
             if (MTLogEnabled()) {
-                MTLog(@"GCDAsyncSocket#%p, Connection time: %f ms, interface: %@", self, (CFAbsoluteTimeGetCurrent() - startTime) * 1000.0f, isWifi ? @"Wifi" : @"WAN");
+                MTLog(@"%@ Connection time: %f ms, interface: %@", self, (CFAbsoluteTimeGetCurrent() - startTime) * 1000.0f, isWifi ? @"Wifi" : @"WAN");
             }
             
 			dispatch_async(socketQueue, ^{ @autoreleasepool {
@@ -2725,7 +2725,8 @@ enum GCDAsyncSocketConfig
 	LogTrace();
 	
 	NSAssert(dispatch_get_current_queue() == socketQueue, @"Must be dispatched on socketQueue");
-	
+    
+    MTLog(@"%@: error %@", self, error ?: @"");
 	
 	[self endConnectTimeout];
 	

@@ -46,6 +46,9 @@
     return another; \
 } \
 \
+- (NSString *)description {\
+    return [NSString stringWithFormat:@"MT##name##InternalId(%@)", @(_value)];\
+}\
 @end
 
 #endif

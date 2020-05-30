@@ -270,11 +270,11 @@
 
 - (void)mtProtoDidAddService:(MTProto *)mtProto
 {
-    MTLog(@"%@, proto %p", self, mtProto);
-    
     _mtProto = mtProto;
     _serialization = mtProto.context.serialization;
     _apiEnvironment = mtProto.apiEnvironment;
+    
+    MTLog(@"%@, proto %p", self, mtProto);
 }
     
 - (void)mtProtoApiEnvironmentUpdated:(MTProto *)mtProto apiEnvironment:(MTApiEnvironment *)apiEnvironment {
@@ -303,11 +303,12 @@
     
     NSString *debugDescription = @"";
     
+    if (MTLogEnabled()) {
+        MTLog(@"%@: initializeApi %@, apiEnvironment.systemCode.length %d, request %@", self, @(initializeApi), (int)_apiEnvironment.systemCode.length, request);
+    }
+    
     if (initializeApi && _apiEnvironment != nil)
     {
-        if (MTLogEnabled()) {
-            MTLog(@"%@ apiEnvironment: %d", self, (int)_apiEnvironment.systemCode.length);
-        }
         MTBuffer *buffer = [[MTBuffer alloc] init];
         
         // invokeWithLayer
@@ -909,7 +910,7 @@
                 return true;
             } else {
                 MTLog(@"%@ will not request message %" PRId64 " (transaction was not completed)", self, messageId);
-                MTLog(@"%@ but today it will]", self);
+                MTLog(@"%@ but today it will", self);
                 return true;
             }
         }

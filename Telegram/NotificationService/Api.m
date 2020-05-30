@@ -1726,6 +1726,9 @@ id sizes_result = [Api1__Serializer addSerializerToObject:sizes_copy serializer:
     return _object;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"Api1_InputFileLocation(%@, %@, %@)", self.pid, self.accessHash, self.thumbSize];
+}
 
 @end
 

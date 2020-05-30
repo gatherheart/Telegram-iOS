@@ -84,7 +84,7 @@
         return;
     }
     
-    _sourceDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:sourceDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    _sourceDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:sourceDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"beginTransferFromDatacenterId"];
     _sourceDatacenterMtProto.useTempAuthKeys = context.useTempAuthKeys;
     
     MTRequestMessageService *requestService = [[MTRequestMessageService alloc] initWithContext:context];
@@ -122,7 +122,7 @@
     _sourceDatacenterMtProto = nil;
     
     MTContext *context = _context;
-    _destinationDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:_destinationDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    _destinationDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:_destinationDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"beginTransferWithId#%@", @(dataId)]];
     _destinationDatacenterMtProto.canResetAuthData = true;
     _destinationDatacenterMtProto.useTempAuthKeys = context.useTempAuthKeys;
     

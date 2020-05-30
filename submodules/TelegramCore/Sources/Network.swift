@@ -521,7 +521,7 @@ func initializedNetwork(arguments: NetworkInitializationArguments, supplementary
             //let _ = MTBackupAddressSignals.fetchBackupIps(testingEnvironment, currentContext: context, additionalSource: wrappedAdditionalSource, phoneNumber: phoneNumber).start(next: nil)
             #endif
             
-            let mtProto = MTProto(context: context, datacenterId: datacenterId, usageCalculationInfo: usageCalculationInfo(basePath: basePath, category: nil), requiredAuthToken: nil, authTokenMasterDatacenterId: 0)!
+            let mtProto = MTProto(context: context, datacenterId: datacenterId, usageCalculationInfo: usageCalculationInfo(basePath: basePath, category: nil), requiredAuthToken: nil, authTokenMasterDatacenterId: 0, hint: "initializedNetwork")!
             mtProto.useTempAuthKeys = context.useTempAuthKeys
             mtProto.checkForProxyConnectionIssues = true
             
@@ -721,7 +721,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     var didReceiveSoftAuthResetError: (() -> Void)?
     
     override public var description: String {
-        return "Network context: \(self.context)"
+        return "Network#\(toAddressString(self))(datacenterId \(self.datacenterId), context \(self.context), proto \(mtProto))"
     }
     
     fileprivate init(queue: Queue, datacenterId: Int, context: MTContext, mtProto: MTProto, requestService: MTRequestMessageService, connectionStatusDelegate: MTProtoConnectionStatusDelegate, _connectionStatus: Promise<ConnectionStatus>, basePath: String, appDataDisposable: Disposable, encryptionProvider: EncryptionProvider) {
@@ -741,7 +741,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
         super.init()
         
         let selfAddress = toAddressString(self)
-        Logger.shared.log("Network", "new instance #\(selfAddress), datacenterId \(datacenterId), context \(context), proto \(mtProto), basePath \(basePath)")
+        Logger.shared.log("Network", "\(self) new instance, basePath \(basePath)")
         
         self.requestService.didReceiveSoftAuthResetError = { [weak self] in
             self?.didReceiveSoftAuthResetError?()
@@ -848,7 +848,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     }
     
     public func requestMessageServiceAuthorizationRequired(_ requestMessageService: MTRequestMessageService!) {
-        Logger.shared.log("Network", "requestMessageServiceAuthorizationRequired")
+        Logger.shared.log("Network", "\(self)")
         self.loggedOut?()
     }
     
@@ -919,6 +919,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     }
     
     public func requestWithAdditionalInfo<T>(_ data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), info: NetworkRequestAdditionalInfo, tag: NetworkRequestDependencyTag? = nil, automaticFloodWait: Bool = true) -> Signal<NetworkRequestResult<T>, MTRpcError> {
+        Logger.shared.log("Network", "\(self) requestWithAdditionalInfo \(data.0), info \(info), tag \(tag), automaticFloodWait \(automaticFloodWait)")
         let requestService = self.requestService
         return Signal { subscriber in
             let request = MTRequest()
@@ -988,6 +989,8 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     }
         
     public func request<T>(_ data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), tag: NetworkRequestDependencyTag? = nil, automaticFloodWait: Bool = true) -> Signal<T, MTRpcError> {
+        Logger.shared.log("Network", "\(self) request \(data.0), tag \(tag), automaticFloodWait \(automaticFloodWait)")
+        
         let requestService = self.requestService
         return Signal { subscriber in
             let request = MTRequest()

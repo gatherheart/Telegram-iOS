@@ -829,6 +829,10 @@ static NSData *decrypt_TL_data(id<EncryptionProvider> provider, unsigned char bu
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTBackupDatacenterAddress(datacenterId %@, %@:%@, secret %@)", @(_datacenterId), _ip, @(_port), @(_secret.length)];
+}
+
 @end
 
 @implementation MTBackupDatacenterData
@@ -841,6 +845,10 @@ static NSData *decrypt_TL_data(id<EncryptionProvider> provider, unsigned char bu
         _addressList = addressList;
     }
     return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTBackupDatacenterData#%p(timestamp %@, expirationDate %@, addressList [%@])", self, @(_timestamp), @(_expirationDate), _addressList];
 }
 
 @end

@@ -90,7 +90,7 @@
     {
         if ([context authInfoForDatacenterWithId:_targetDatacenterId] != nil)
         {
-            _mtProto = [[MTProto alloc] initWithContext:context datacenterId:_targetDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+            _mtProto = [[MTProto alloc] initWithContext:context datacenterId:_targetDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"askForAnAddressDatacenterWithId"];
             _mtProto.useTempAuthKeys = useTempAuthKeys;
             _requestService = [[MTRequestMessageService alloc] initWithContext:_context];
             _requestService.forceBackgroundRequests = true;

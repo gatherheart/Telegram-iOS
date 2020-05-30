@@ -13,7 +13,7 @@
 }
 
 - (NSString *)description {
-    return _addressList.description;
+    return [NSString stringWithFormat:@"MTDatacenterAddressListData#%p(%@)", self, _addressList];
 }
 
 @end

@@ -159,8 +159,6 @@
     NSMutableDictionary<NSNumber *, id<MTDisposable> > *_fetchPublicKeysActions;
     
     MTDisposableSet *_cleanupSessionInfoDisposables;
-    
-    NSString * _hint;
 }
 
 @end
@@ -353,7 +351,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             if (datacenterAddressSetById != nil) {
                 _datacenterAddressSetById = [[NSMutableDictionary alloc] initWithDictionary:datacenterAddressSetById];
                 if (MTLogEnabled()) {
-                    MTLog(@"[MTContext loaded datacenterAddressSetById: %@]", _datacenterAddressSetById);
+                    MTLog(@"%@ loaded datacenterAddressSetById: %@", self, _datacenterAddressSetById);
                 }
             }
             
@@ -361,7 +359,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             if (datacenterManuallySelectedSchemeById != nil) {
                 _datacenterManuallySelectedSchemeById = [[NSMutableDictionary alloc] initWithDictionary:datacenterManuallySelectedSchemeById];
                 if (MTLogEnabled()) {
-                    MTLog(@"[MTContext loaded datacenterManuallySelectedSchemeById: %@]", _datacenterManuallySelectedSchemeById);
+                    MTLog(@"%@ loaded datacenterManuallySelectedSchemeById: %@", self, _datacenterManuallySelectedSchemeById);
                 }
             }
             
@@ -399,11 +397,11 @@ static int32_t fixedTimeDifferenceValue = 0;
                 _cleanupSessionIdsByAuthKeyId = [[NSMutableDictionary alloc] initWithDictionary:cleanupSessionIdsByAuthKeyId];
             
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: received keychain globalTimeDifference:%f datacenterAuthInfoById:%@]", self, _globalTimeDifference, _datacenterAuthInfoById);
+                MTLog(@"%@: received keychain globalTimeDifference:%f datacenterAuthInfoById:%@", self, _globalTimeDifference, _datacenterAuthInfoById);
             }
         } else {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: received keychain nil]", self);
+                MTLog(@"%@: received keychain nil", self);
             }
         }
     }];
@@ -462,7 +460,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         _globalTimeDifference = globalTimeDifference;
         
         if (MTLogEnabled()) {
-            MTLog(@"[MTContext#%p: global time difference changed: %.1fs]", self, globalTimeDifference);
+            MTLog(@"%@: global time difference changed: %.1fs", self, globalTimeDifference);
         }
         
         [_keychain setObject:@(_globalTimeDifference) forKey:@"globalTimeDifference" group:@"temp"];
@@ -484,7 +482,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (addressSet != nil && datacenterId != 0)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: address set updated for %d]", self, datacenterId);
+                MTLog(@"%@: address set updated for %d", self, datacenterId);
             }
             
             bool updateSchemes = forceUpdateSchemes;
@@ -577,7 +575,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (updated)
         {
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: added address %@ for datacenter %d]", self, address, datacenterId);
+                MTLog(@"%@: added address %@ for datacenter %d", self, address, datacenterId);
             }
             
             _datacenterAddressSetById[@(datacenterId)] = addressSet;
@@ -672,7 +670,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             NSArray *currentListeners = [[NSArray alloc] initWithArray:_changeListeners];
             
             if (MTLogEnabled()) {
-                MTLog(@"[MTContext#%p: %@ transport scheme updated for %d: %@]", self, media ? @"media" : @"generic", datacenterId, transportScheme);
+                MTLog(@"%@: %@ transport scheme updated for %d: %@", self, media ? @"media" : @"generic", datacenterId, transportScheme);
             }
             
             for (id<MTContextChangeListener> listener in currentListeners) {
@@ -840,7 +838,7 @@ static int32_t fixedTimeDifferenceValue = 0;
             }];
         }
         if (MTLogEnabled()) {
-            MTLog(@"[MTContext has chosen a scheme for datacenterId %d: %@]", datacenterId, schemeWithEarliestFailure);
+            MTLog(@"%@ has chosen a scheme for datacenterId %d: %@", self, datacenterId, schemeWithEarliestFailure);
         }
         result = schemeWithEarliestFailure;
     } synchronous:true];

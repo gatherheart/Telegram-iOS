@@ -140,7 +140,7 @@ static const NSTimeInterval MTTcpTransportSleepWatchdogTimeout = 60.0;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"MTTcpTransport#%p(context#%p, datacenterId %@)", self, _context, @(_datacenterId)];
+    return [NSString stringWithFormat:@"MTTcpTransport#%p(context#%p(%@), datacenterId %@)", self, _context, _context.hint, @(_datacenterId)];
 }
 
 - (void)setUsageCalculationInfo:(MTNetworkUsageCalculationInfo *)usageCalculationInfo {

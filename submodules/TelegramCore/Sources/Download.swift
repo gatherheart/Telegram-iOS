@@ -44,7 +44,7 @@ class Download: NSObject, MTRequestMessageServiceDelegate {
             requiredAuthToken = Int(datacenterId) as NSNumber
         }
         
-        self.mtProto = MTProto(context: self.context, datacenterId: datacenterId, usageCalculationInfo: usageInfo, requiredAuthToken: requiredAuthToken, authTokenMasterDatacenterId: authTokenMasterDatacenterId)
+        self.mtProto = MTProto(context: self.context, datacenterId: datacenterId, usageCalculationInfo: usageInfo, requiredAuthToken: requiredAuthToken, authTokenMasterDatacenterId: authTokenMasterDatacenterId, hint: "Download.init")
         self.mtProto.cdn = isCdn
         self.mtProto.useTempAuthKeys = self.context.useTempAuthKeys && !isCdn
         self.mtProto.media = isMedia

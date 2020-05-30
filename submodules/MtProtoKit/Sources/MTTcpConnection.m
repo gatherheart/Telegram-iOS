@@ -932,7 +932,7 @@ struct ctr_state {
     _responseTimeoutTimer = nil;
     
     if (MTLogEnabled()) {
-        MTLog(@"%@ response timeout]", self);
+        MTLog(@"%@ response timeout", self);
     }
     [self closeAndNotifyWithError:true hint:@"response timeout"];
 }
@@ -1424,7 +1424,7 @@ struct ctr_state {
         } else {
             if (length > 16 * 1024 * 1024) {
                 if (MTLogEnabled()) {
-                    MTLog(@"%@ received invalid length %d]", self, length);
+                    MTLog(@"%@ received invalid length %d", self, length);
                 }
                 [self closeAndNotifyWithError:true hint:@"received invalid length"];
             } else {

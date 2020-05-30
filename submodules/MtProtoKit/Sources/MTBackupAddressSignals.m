@@ -107,6 +107,9 @@ static NSData *base64_decode(NSString *str) {
                     NSMutableData *finalData = [[NSMutableData alloc] initWithData:result];
                     [finalData setLength:256];
                     MTBackupDatacenterData *datacenterData = MTIPDataDecode(encryptionProvider, finalData, phoneNumber);
+                    
+                    MTLog(@"decoded new datacenterData: %@, phoneNumber %@, currentContext #%p", datacenterData, phoneNumber, currentContext);
+                    
                     if (datacenterData != nil && [self checkIpData:datacenterData timestamp:(int32_t)[currentContext globalTime] source:@"resolveGoogle"]) {
                         return [MTSignal single:datacenterData];
                     }
@@ -210,6 +213,9 @@ static NSString *makeRandomPadding() {
                     NSMutableData *finalData = [[NSMutableData alloc] initWithData:result];
                     [finalData setLength:256];
                     MTBackupDatacenterData *datacenterData = MTIPDataDecode(encryptionProvider, finalData, phoneNumber);
+
+                    MTLog(@"decoded new datacenterData: %@, phoneNumber %@, currentContext #%p", datacenterData, phoneNumber, currentContext);
+                    
                     if (datacenterData != nil && [self checkIpData:datacenterData timestamp:(int32_t)[currentContext globalTime] source:@"resolveCloudflare"]) {
                         return [MTSignal single:datacenterData];
                     }
@@ -252,7 +258,7 @@ static NSString *makeRandomPadding() {
         //context.keychain = currentContext.keychain;
     }
     
-    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:address.datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:address.datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"fetchConfigFromAddress %@", address]];
     if (address.datacenterId != 0) {
         mtProto.useTempAuthKeys = currentContext.useTempAuthKeys;
     }
@@ -275,6 +281,7 @@ static NSString *makeRandomPadding() {
              if (error == nil) {
                  __strong MTContext *strongCurrentContext = weakCurrentContext;
                  if (strongCurrentContext != nil) {
+                     MTLog(@"enumerating %@ addresslist after fetching config from %@, current context %@", @(result.addressList.count), address, strongCurrentContext);
                      [result.addressList enumerateKeysAndObjectsUsingBlock:^(NSNumber *nDatacenterId, NSArray *list, __unused BOOL *stop) {
                          MTDatacenterAddressSet *addressSet = [[MTDatacenterAddressSet alloc] initWithAddressList:list];
                          
@@ -283,7 +290,7 @@ static NSString *makeRandomPadding() {
                          if (currentAddressSet == nil || ![addressSet isEqual:currentAddressSet])
                          {
                              if (MTLogEnabled()) {
-                                 MTLog(@"[Backup address fetch: updating datacenter %d address set to %@]", [nDatacenterId intValue], addressSet);
+                                 MTLog(@"Backup address fetch: updating datacenterId %d address set to %@ after fetching config from %@", [nDatacenterId intValue], addressSet, address);
                              }
                              
                              [strongCurrentContext updateAddressSetForDatacenterWithId:[nDatacenterId integerValue] addressSet:addressSet forceUpdateSchemes:true];
@@ -338,6 +345,7 @@ static NSString *makeRandomPadding() {
                 [signals addObject:signal];
                 delay += 5.0;
             }
+            MTLog(@"merge signals %@ from data %@", @(signals.count), data);
             return [[MTSignal mergeSignals:signals] take:1];
         }
         return [MTSignal complete];
