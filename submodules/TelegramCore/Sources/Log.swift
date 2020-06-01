@@ -96,7 +96,7 @@ public final class Logger {
     private var file: (ManagedFile, Int)?
     private var shortFile: (ManagedFile, Int)?
     
-    private let filterLogByTag: Bool = true
+    private let filterLogByTag: Bool = false
     private let tagWhiteList: Set = ["Network", "MT"]
     
     public var logToFile: Bool = true {

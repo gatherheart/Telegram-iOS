@@ -268,6 +268,8 @@ final class MultiplexedRequestManager {
     }
     
     func request<T>(to target: MultiplexedRequestTarget, consumerId: Int64, data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), tag: MediaResourceFetchTag?, continueInBackground: Bool) -> Signal<T, MTRpcError> {
+        Logger.shared.log("Network", "request target \(target), consumerId \(consumerId), data \(apiFunctionDescription(of: data.0)), tag \(tag), continueInBackground \(continueInBackground)")
+
         return Signal { subscriber in
             let disposable = MetaDisposable()
             self.context.with { context in

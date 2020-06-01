@@ -805,7 +805,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
                         datacenterId = id
                         isCdn = true
                 }
-                return strongSelf.makeWorker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag, continueInBackground: continueInBackground)
+                return strongSelf.makeWorker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag, hint:"multiplexedRequestManager", continueInBackground: continueInBackground)
             }
             return nil
         })
@@ -815,10 +815,10 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
         self.shouldKeepConnectionDisposable.set(shouldKeepConnectionSignal.start(next: { [weak self] value in
             if let strongSelf = self {
                 if value {
-                    Logger.shared.log("Network", "Resume network connection")
+                    Logger.shared.log("Network", "\(strongSelf): resume network connection")
                     strongSelf.mtProto.resume()
                 } else {
-                    Logger.shared.log("Network", "Pause network connection")
+                    Logger.shared.log("Network", "\(strongSelf): pause network connection")
                     strongSelf.mtProto.pause()
                 }
             }
@@ -852,32 +852,34 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
         self.loggedOut?()
     }
     
-    func download(datacenterId: Int, isMedia: Bool, isCdn: Bool = false, tag: MediaResourceFetchTag?) -> Signal<Download, NoError> {
-        return self.worker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag)
+    func download(datacenterId: Int, isMedia: Bool, isCdn: Bool = false, tag: MediaResourceFetchTag?, hint: String) -> Signal<Download, NoError> {
+        return self.worker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag, hint: "download(\(hint))")
     }
     
-    func upload(tag: MediaResourceFetchTag?) -> Signal<Download, NoError> {
-        return self.worker(datacenterId: self.datacenterId, isCdn: false, isMedia: false, tag: tag)
+    func upload(tag: MediaResourceFetchTag?, hint: String) -> Signal<Download, NoError> {
+        return self.worker(datacenterId: self.datacenterId, isCdn: false, isMedia: false, tag: tag, hint: "upload(\(hint))")
     }
     
-    func background() -> Signal<Download, NoError> {
-        return self.worker(datacenterId: self.datacenterId, isCdn: false, isMedia: false, tag: nil)
+    func background(hint: String) -> Signal<Download, NoError> {
+        return self.worker(datacenterId: self.datacenterId, isCdn: false, isMedia: false, tag: nil, hint:"background(\(hint))")
     }
     
-    private func makeWorker(datacenterId: Int, isCdn: Bool, isMedia: Bool, tag: MediaResourceFetchTag?, continueInBackground: Bool = false) -> Download {
+    private func makeWorker(datacenterId: Int, isCdn: Bool, isMedia: Bool, tag: MediaResourceFetchTag?, hint: String, continueInBackground: Bool = false) -> Download {
         let queue = Queue.mainQueue()
         let shouldKeepWorkerConnection: Signal<Bool, NoError> = combineLatest(queue: queue, self.shouldKeepConnection.get(), self.shouldExplicitelyKeepWorkerConnections.get(), self.shouldKeepBackgroundDownloadConnections.get())
         |> map { shouldKeepConnection, shouldExplicitelyKeepWorkerConnections, shouldKeepBackgroundDownloadConnections -> Bool in
             return shouldKeepConnection || shouldExplicitelyKeepWorkerConnections || (continueInBackground && shouldKeepBackgroundDownloadConnections)
         }
         |> distinctUntilChanged
+
+        Logger.shared.log("Network", "\(self) makeWorker, datacenterId \(datacenterId), isCdn \(isCdn), isMedia \(isMedia), tag \(tag), hint \(hint), continueInBackground \(continueInBackground)")
         return Download(queue: self.queue, datacenterId: datacenterId, isMedia: isMedia, isCdn: isCdn, context: self.context, masterDatacenterId: self.datacenterId, usageInfo: usageCalculationInfo(basePath: self.basePath, category: (tag as? TelegramMediaResourceFetchTag)?.statsCategory), shouldKeepConnection: shouldKeepWorkerConnection)
     }
     
-    private func worker(datacenterId: Int, isCdn: Bool, isMedia: Bool, tag: MediaResourceFetchTag?) -> Signal<Download, NoError> {
+    private func worker(datacenterId: Int, isCdn: Bool, isMedia: Bool, tag: MediaResourceFetchTag?, hint: String) -> Signal<Download, NoError> {
         return Signal { [weak self] subscriber in
             if let strongSelf = self {
-                subscriber.putNext(strongSelf.makeWorker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag))
+                subscriber.putNext(strongSelf.makeWorker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag, hint: hint))
             }
             subscriber.putCompletion()
             
@@ -989,7 +991,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
     }
         
     public func request<T>(_ data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), tag: NetworkRequestDependencyTag? = nil, automaticFloodWait: Bool = true) -> Signal<T, MTRpcError> {
-        Logger.shared.log("Network", "\(self) request \(data.0), tag \(tag), automaticFloodWait \(automaticFloodWait)")
+        Logger.shared.log("Network", "\(self) request \(apiFunctionDescription(of: data.0)), tag \(tag), automaticFloodWait \(automaticFloodWait)")
         
         let requestService = self.requestService
         return Signal { subscriber in

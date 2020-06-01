@@ -40,6 +40,10 @@
     return another;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTOutgoingMessageInternalId(%@)", @(_value)];
+}
+
 @end
 
 @implementation MTOutgoingMessage
@@ -64,6 +68,10 @@
         _requiresConfirmation = true;
     }
     return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTOutgoingMessage(%@, data %@, metadata %@, additionalDebug %@, shortMeta %@, messageId %@/%@)", _internalId, _data ?: @"", _metadata, _additionalDebugDescription ?: @"", _shortMetadata ?: @"", @(_messageId), @(_messageSeqNo)];
 }
 
 @end

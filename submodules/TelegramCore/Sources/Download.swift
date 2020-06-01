@@ -3,6 +3,7 @@ import Postbox
 import MtProtoKit
 import SwiftSignalKit
 import TelegramApi
+import NetworkLogging
 
 private func roundUp(_ value: Int, to multiple: Int) -> Int {
     if multiple == 0 {
@@ -31,6 +32,10 @@ class Download: NSObject, MTRequestMessageServiceDelegate {
     let requestService: MTRequestMessageService
     
     private var shouldKeepConnectionDisposable: Disposable?
+
+    public override var description: String {
+        return "Download#\(toAddressString(self))(datacenterId \(datacenterId), isCdn \(isCdn), context \(toAddressString(context)), mtProto \(toAddressString(mtProto)), requestService \(requestService))";
+    }
     
     init(queue: Queue, datacenterId: Int, isMedia: Bool, isCdn: Bool, context: MTContext, masterDatacenterId: Int, usageInfo: MTNetworkUsageCalculationInfo?, shouldKeepConnection: Signal<Bool, NoError>) {
         self.datacenterId = datacenterId
@@ -52,6 +57,8 @@ class Download: NSObject, MTRequestMessageServiceDelegate {
         self.requestService.forceBackgroundRequests = true
         
         super.init()
+
+        Logger.shared.log("Network", "\(self) new instance masterDatacenterId \(masterDatacenterId)")
         
         self.requestService.delegate = self
         self.mtProto.add(self.requestService)
@@ -60,10 +67,10 @@ class Download: NSObject, MTRequestMessageServiceDelegate {
         self.shouldKeepConnectionDisposable = (shouldKeepConnection |> distinctUntilChanged |> deliverOn(queue)).start(next: { [weak mtProto] value in
             if let mtProto = mtProto {
                 if value {
-                    Logger.shared.log("Network", "Resume worker network connection")
+                    Logger.shared.log("Network", "\(self) resume worker network connection")
                     mtProto.resume()
                 } else {
-                    Logger.shared.log("Network", "Pause worker network connection")
+                    Logger.shared.log("Network", "\(self) pause worker network connection")
                     mtProto.pause()
                 }
             }
@@ -71,6 +78,8 @@ class Download: NSObject, MTRequestMessageServiceDelegate {
     }
     
     deinit {
+        Logger.shared.log("Network", "\(self) deinit")
+
         self.mtProto.remove(self.requestService)
         self.mtProto.stop()
         self.mtProto.finalizeSession()

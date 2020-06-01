@@ -278,7 +278,7 @@ final class MediaReferenceRevalidationContext {
         return self.genericItem(key: .message(message: message), background: background, request: { next, error in
             let source: Signal<FetchMessageHistoryHoleSource, NoError>
             if background {
-                source = network.background()
+                source = network.background(hint: "FetchdMediaResource.message(background \(background), message \(message)")
                 |> map(FetchMessageHistoryHoleSource.download)
             } else {
                 source = .single(.network(network))

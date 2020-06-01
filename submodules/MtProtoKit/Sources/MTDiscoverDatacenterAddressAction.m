@@ -6,6 +6,7 @@
 #import <MtProtoKit/MTDatacenterAddressSet.h>
 #import <MtProtoKit/MTRequestMessageService.h>
 #import <MtProtoKit/MTRequest.h>
+#import <MtProtoKit/MTLogging.h>
 
 @interface MTDiscoverDatacenterAddressAction () <MTContextChangeListener>
 {
@@ -66,6 +67,8 @@
                     *stop = true;
             }
         }];
+
+        MTLog(@"%@: datacenterAddressIsKnown %@, currentDatacenterId %@", self, @(datacenterAddressIsKnown), @(currentDatacenterId));
         
         if (datacenterAddressIsKnown)
             [self complete];
@@ -114,6 +117,8 @@
                         [strongSelf getConfigFailed];
                 }
             }];
+
+            MTLog(@"%@: targetDatacenterId %@", self, @(_targetDatacenterId));
             
             [_requestService addRequest:request];
         }

@@ -28,4 +28,8 @@
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"%@(badMessageId %@/%@, nextSalt %@)", [self class], @(self.badMessageId), @(self.badMessageSeqNo), @(_nextServerSalt)];
+}
+
 @end

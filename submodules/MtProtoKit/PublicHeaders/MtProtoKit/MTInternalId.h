@@ -47,7 +47,7 @@
 } \
 \
 - (NSString *)description {\
-    return [NSString stringWithFormat:@"MT##name##InternalId(%@)", @(_value)];\
+    return [NSString stringWithFormat:@"%@(%@)", [self class], @(_value)];\
 }\
 @end
 

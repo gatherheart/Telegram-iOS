@@ -181,7 +181,7 @@ static const NSUInteger MTMaxUnacknowledgedMessageCount = 64;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"MTProto#%p@%p(datacenterId %@, shouldStayConnected %@, mtState %@, connectionState %@, authInfo %@, hint(%@))", self, _context, @(_datacenterId), @(_shouldStayConnected), @(_mtState), _connectionState, _authInfo ?: @"", _hint];
+    return [NSString stringWithFormat:@"MTProto#%p@%p(datacenterId %@, shouldStayConnected %@, mtState %@, connectionState %@, authInfo %@, hint(%@), transport %@)", self, _context, @(_datacenterId), @(_shouldStayConnected), @(_mtState), _connectionState, _authInfo ?: @"", _hint, _transport];
 }
 
 - (void)setUseExplicitAuthKey:(MTDatacenterAuthKey *)useExplicitAuthKey {

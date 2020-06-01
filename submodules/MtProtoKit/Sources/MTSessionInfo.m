@@ -107,8 +107,10 @@
     
     if (messageId < _lastClientMessageId)
     {
-        if (monotonityViolated != NULL)
+        if (monotonityViolated != NULL) {
             *monotonityViolated = true;
+            MTLog(@"%@: monotonity violated %@/%@", self, @(messageId), @(_lastClientMessageId));
+        }
     }
     
     if (messageId == _lastClientMessageId)
@@ -118,6 +120,11 @@
         messageId++;
     
     _lastClientMessageId = messageId;
+
+    if (monotonityViolated && *monotonityViolated) {
+        MTLog(@"%@: monotonity violated update last to %@", self, @(_lastClientMessageId));
+    }
+
     return messageId;
 }
 

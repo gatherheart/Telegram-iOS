@@ -41,6 +41,8 @@ private func fetchLocalFileResource(path: String, move: Bool) -> Signal<MediaRes
 }
 
 func fetchResource(account: Account, resource: MediaResource, intervals: Signal<[(Range<Int>, MediaBoxFetchPriority)], NoError>, parameters: MediaResourceFetchParameters?) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError>? {
+    Logger.shared.log("Network", "account \(account), resource \(resource), parameters \(parameters)")
+
     if let _ = resource as? EmptyMediaResource {
         return .single(.reset)
         |> then(.never())

@@ -149,7 +149,7 @@
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"MTDatacenterAuthInfo authKeyId:%" PRId64 " authKey:%lu", _authKeyId, (unsigned long)_authKey.length];
+    return [NSString stringWithFormat:@"MTDatacenterAuthInfo(authKeyId:%" PRId64 " authKey:%lu)", _authKeyId, (unsigned long)_authKey.length];
 }
 
 @end

@@ -599,7 +599,7 @@ static int32_t fixedTimeDifferenceValue = 0;
         if (datacenterId != 0)
         {
             if (MTLogEnabled()) {
-                MTLog(@"%@: auth info updated for datacenterId %d to %@", self, datacenterId, authInfo);
+                MTLog(@"%@: auth info updated for datacenterId %d form %@ to %@", self, datacenterId, _datacenterAuthInfoById[@(datacenterId)], authInfo);
             }
             
             if (authInfo != nil) {

@@ -20,7 +20,7 @@ public func getBankCardInfo(account: Account, cardNumber: String) -> Signal<Bank
     |> mapToSignal { datacenterId in
         let signal: Signal<Api.payments.BankCardData, MTRpcError>
         if account.network.datacenterId != datacenterId {
-            signal = account.network.download(datacenterId: Int(datacenterId), isMedia: false, tag: nil)
+            signal = account.network.download(datacenterId: Int(datacenterId), isMedia: false, tag: nil, hint: "BankCards.getBankCardInfo(\(account), \(cardNumber))")
             |> castError(MTRpcError.self)
             |> mapToSignal { worker in
                 return worker.request(Api.functions.payments.getBankCardData(number: cardNumber))
