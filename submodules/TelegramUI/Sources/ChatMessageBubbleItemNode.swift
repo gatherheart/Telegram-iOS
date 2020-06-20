@@ -939,10 +939,12 @@ class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePrevewItemNode 
                 if currentClass == contentNodeClass && currentMessage.stableId == contentNodeMessage.stableId {
                     contentPropertiesAndPrepareLayouts.append((contentNodeMessage, supportsMosaic, attributes, currentLayout))
                     found = true
+                    ASDisplayNode.auxiliaryTracker().deallocInvoked("beginLayout-found")
                     break
                 }
             }
             if !found {
+                ASDisplayNode.auxiliaryTracker().initInvoked("beginLayout-found")
                 let contentNode = (contentNodeClass as! ChatMessageBubbleContentNode.Type).init()
                 contentPropertiesAndPrepareLayouts.append((contentNodeMessage, contentNode.supportsMosaic, attributes, contentNode.asyncLayoutContent()))
                 if addedContentNodes == nil {

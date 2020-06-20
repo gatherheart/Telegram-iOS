@@ -95,6 +95,8 @@ AS_EXTERN NSInteger const ASDefaultDrawingPriority;
  *
  */
 
+@class InstanceLifecycleTracker;
+
 @interface ASDisplayNode : NSObject <ASLocking> {
 @public
   /**
@@ -104,6 +106,9 @@ AS_EXTERN NSInteger const ASDefaultDrawingPriority;
    */
   void *_displayNodeContext;
 }
+
++ (InstanceLifecycleTracker *)sharedTracker;
++ (InstanceLifecycleTracker *)auxiliaryTracker;
 
 + (void)drawRect:(CGRect)bounds withParameters:(nullable id)parameters
      isCancelled:(AS_NOESCAPE asdisplaynode_iscancelled_block_t)isCancelledBlock
@@ -991,6 +996,12 @@ typedef NS_ENUM(NSInteger, ASLayoutEngineType) {
 
 @interface CALayer (ASDisplayNodeInternal)
 @property (nullable, weak) ASDisplayNode *asyncdisplaykit_node;
+@end
+
+@interface InstanceLifecycleTracker : NSObject
+- (void)initInvoked:(NSString *)name;
+- (void)deallocInvoked:(NSString *)name;
+- (void)printStats:(NSString *)cmd;
 @end
 
 NS_ASSUME_NONNULL_END
