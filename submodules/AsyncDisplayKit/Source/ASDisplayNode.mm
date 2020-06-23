@@ -3884,11 +3884,11 @@ static int _get_count(NSDictionary<NSString *, NSNumber *> * dict, NSString * ke
         _update_dict_count(_mtInitCounts, name, 1);
         _mtInit += 1;
         
-        [self _printBriefStats:[NSString stringWithFormat:@"mt-init %@", name]];
+        [self _printBriefStats:name label:@"mt-init"];
     } else {
         _update_dict_count(_nmtInitCounts, name, 1);
         _nmtInit += 1;
-        [self _printBriefStats:[NSString stringWithFormat:@"nmt-init %@", name]];
+        [self _printBriefStats:name label:@"nmt-init"];
     }
 }
 
@@ -3899,17 +3899,34 @@ static int _get_count(NSDictionary<NSString *, NSNumber *> * dict, NSString * ke
         _update_dict_count(_mtDeallocCounts, name, 1);
         _mtDealloc += 1;
         
-        [self _printBriefStats:[NSString stringWithFormat:@"mt-dealloc %@", name]];
+        [self _printBriefStats:name label:@"mt-dealloc"];
     } else {
         _update_dict_count(_nmtDeallocCounts, name, 1);
         _nmtDealloc += 1;
         
-        [self _printBriefStats:[NSString stringWithFormat:@"nmt-dealloc %@", name]];
+        [self _printBriefStats:name label:@"nmt-dealloc"];
     }
 }
 
-- (void)_printBriefStats:(NSString *)label {
-    NSLog(@"brief life stats %@: live %d, init %d (%d, %d), dealloc %d (%d, %d)", label, _mtInit + _nmtInit - _mtDealloc - _nmtDealloc, _mtInit + _nmtInit, _mtInit, _nmtInit, _mtDealloc + _nmtDealloc, _mtDealloc, _nmtDealloc);
+- (void)_printBriefStats:(NSString *)key label:(NSString *)label {
+    NSMutableString * statsString = [NSMutableString stringWithFormat:@"\tbrief total live %d, init %d (%d, %d), dealloc %d (%d, %d)",
+                                     _mtInit + _nmtInit - _mtDealloc - _nmtDealloc,
+                                     _mtInit + _nmtInit,
+                                     _mtInit,
+                                     _nmtInit,
+                                     _mtDealloc + _nmtDealloc,
+                                     _mtDealloc,
+                                     _nmtDealloc];
+    [statsString appendFormat:@"\n\tbrief %@, init %d (%d, %d), dealloc %d(%d, %d)",
+     key,
+     _get_count(_mtInitCounts, key) + _get_count(_nmtInitCounts, key),
+     _get_count(_mtInitCounts, key),
+     _get_count(_nmtInitCounts, key),
+     _get_count(_mtDeallocCounts, key) + _get_count(_nmtDeallocCounts, key),
+     _get_count(_mtDeallocCounts, key),
+     _get_count(_nmtDeallocCounts, key)];
+
+    NSLog(@"brief life stats %@ - %@:\n%@", label, key, statsString);
 }
 
 - (void)printStats:(NSString *)cmd {
