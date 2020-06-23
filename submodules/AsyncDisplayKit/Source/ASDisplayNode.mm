@@ -3909,7 +3909,7 @@ static int _get_count(NSDictionary<NSString *, NSNumber *> * dict, NSString * ke
 }
 
 - (void)_printBriefStats:(NSString *)label {
-    NSLog(@"brief life stats %@: live %d, init %d (%d, %d), dealloc (%d, %d)", label, _mtInit + _nmtInit - _mtDealloc - _nmtDealloc, _mtInit + _nmtInit, _mtInit, _nmtInit, _mtDealloc + _nmtDealloc, _mtDealloc, _nmtDealloc);
+    NSLog(@"brief life stats %@: live %d, init %d (%d, %d), dealloc %d (%d, %d)", label, _mtInit + _nmtInit - _mtDealloc - _nmtDealloc, _mtInit + _nmtInit, _mtInit, _nmtInit, _mtDealloc + _nmtDealloc, _mtDealloc, _nmtDealloc);
 }
 
 - (void)printStats:(NSString *)cmd {

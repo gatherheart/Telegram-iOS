@@ -252,7 +252,7 @@ open class ListView: ASDisplayNode, UIScrollViewAccessibilityDelegate, UIGesture
     private final var createdItemNodes = 0
     
     public final var synchronousNodes = false
-    public final var debugInfo = false
+    public final var debugInfo = true
     
     public var enableExtractedBackgrounds: Bool = false {
         didSet {
@@ -1798,7 +1798,7 @@ open class ListView: ASDisplayNode, UIScrollViewAccessibilityDelegate, UIGesture
             self.fillMissingNodes(synchronous: options.contains(.Synchronous), synchronousLoads: options.contains(.PreferSynchronousResourceLoading), animated: animated, inputAnimatedInsertIndices: animated ? insertedIndexSet : Set<Int>(), insertDirectionHints: insertDirectionHints, inputState: state, inputPreviousNodes: previousNodes, inputOperations: operations, inputCompletion: { updatedState, operations in
                 
                 if self.debugInfo {
-                    print("fillMissingNodes completion \((CACurrentMediaTime() - startTime) * 1000.0) ms")
+                    print("fillMissingNodes completion \((CACurrentMediaTime() - startTime) * 1000.0) ms, mt \(Thread.isMainThread)")
                 }
                 
                 var updateIndices = updateAdjacentItemsIndices

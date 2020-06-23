@@ -208,7 +208,7 @@ public final class TextNodeLayout: NSObject {
         
         if self.attributedString != nil {
             if !Thread.isMainThread && attributedString?.length ?? 0 > 10 {
-                Thread.sleep(forTimeInterval: 0.01)
+                Thread.sleep(forTimeInterval: 0.1)
             }
             ASDisplayNode.sharedTracker().initInvoked("TextNodeLayout")
         } else {

@@ -320,8 +320,14 @@ class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePrevewItemNode 
             }
             strongSelf.applyAbsoluteOffsetSpringInternal(value: value, duration: duration, damping: damping)
         }
+
+        ChatMessageBubbleItemNode.instance_id += 1
+        //self.backgroundColor = ChatMessageBubbleItemNode.bg_colors[ChatMessageBubbleItemNode.instance_id % ChatMessageBubbleItemNode.bg_colors.count]
     }
-    
+
+    static var instance_id = 0
+    static let bg_colors: [UIColor] = [UIColor.red, UIColor.blue, UIColor.green]
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
