@@ -279,6 +279,9 @@ public final class Logger {
           if let name = Thread.current.name {
             thread = name
           }
+            if Thread.isMainThread {
+                thread = "MAIN" + thread
+            }
           if thread.count == 0 {
             thread = toAddressString(Thread.current, suffix: 4)
           }

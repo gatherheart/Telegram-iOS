@@ -292,6 +292,7 @@ final class InstantPageControllerNode: ASDisplayNode, UIScrollViewDelegate {
             
             self.setupScrollOffsetOnLayout = self.webPage == nil
             self.webPage = webPage
+
             if let anchor = anchor {
                 self.initialAnchor = anchor.removingPercentEncoding
             } else if let state = state {
@@ -392,8 +393,11 @@ final class InstantPageControllerNode: ASDisplayNode, UIScrollViewDelegate {
         guard let containerLayout = self.containerLayout, let webPage = self.webPage, let theme = self.theme else {
             return
         }
-        
+
+        let start = CFAbsoluteTimeGetCurrent()
         let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: containerLayout.size.width, safeInset: containerLayout.safeInsets.left, strings: self.strings, theme: theme, dateTimeFormat: self.dateTimeFormat, webEmbedHeights: self.currentWebEmbedHeights)
+        let duration = (CFAbsoluteTimeGetCurrent() - start) * 1000.0
+        Logger.shared.log("debug_layout", "instantPageLayoutForWebPage cost \(duration) ms")
         
         for (_, tileNode) in self.visibleTiles {
             tileNode.removeFromSupernode()
