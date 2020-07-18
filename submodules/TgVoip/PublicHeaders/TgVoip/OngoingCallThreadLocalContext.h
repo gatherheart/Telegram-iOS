@@ -3,6 +3,14 @@
 
 #import <Foundation/Foundation.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+void setOngoingCallBridgingTraceFunction(void (*f)(NSString *, NSString *, NSString *, NSString *, int));
+#ifdef __cplusplus
+}
+#endif
+
 @interface OngoingCallConnectionDescription : NSObject
 
 @property (nonatomic, readonly) int64_t connectionId;

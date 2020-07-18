@@ -75,6 +75,16 @@ private func cleanupCallLogs(account: Account) {
 }
 
 private let setupLogs: Bool = {
+    setOngoingCallBridgingTraceFunction({ domain, what, fileName, functionName, lineNumber in
+        if let what = what {
+            if let domain = domain {
+              Logger.shared.log(domain, what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
+            } else {
+              Logger.shared.log("", what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
+            }
+        }
+    })
+    
     OngoingCallThreadLocalContext.setupLoggingFunction({ value in
         if let value = value {
             Logger.shared.log("TGVOIP", value)
