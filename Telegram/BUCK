@@ -33,14 +33,14 @@ load("//Config:buck_rule_macros.bzl",
 )
 
 framework_dependencies = [
-    "//submodules/MtProtoKit:MtProtoKit",
-    "//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
-    "//submodules/Postbox:Postbox",
+    #"//submodules/MtProtoKit:MtProtoKit",
+    #"//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
+    #"//submodules/Postbox:Postbox",
     "//submodules/TelegramApi:TelegramApi",
-    "//submodules/SyncCore:SyncCore",
+    #"//submodules/SyncCore:SyncCore",
     "//submodules/TelegramCore:TelegramCore",
-    "//submodules/AsyncDisplayKit:AsyncDisplayKit",
-    "//submodules/Display:Display",
+    #"//submodules/AsyncDisplayKit:AsyncDisplayKit",
+    #"//submodules/Display:Display",
     "//submodules/TelegramUI:TelegramUI",
 ]
 

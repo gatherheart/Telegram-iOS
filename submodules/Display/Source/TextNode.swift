@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import AsyncDisplayKit
 import CoreText
+import SwiftSignalKit
 
 private let defaultFont = UIFont.systemFont(ofSize: 15.0)
 
@@ -126,6 +127,35 @@ public final class TextNodeLayoutArguments {
     }
 }
 
+public class AtomicInteger {
+
+    private let lock = DispatchSemaphore(value: 1)
+    private var value = 0
+
+    // You need to lock on the value when reading it too since
+    // there are no volatile variables in Swift as of today.
+    public func get() -> Int {
+
+        lock.wait()
+        defer { lock.signal() }
+        return value
+    }
+
+    public func set(_ newValue: Int) {
+
+        lock.wait()
+        defer { lock.signal() }
+        value = newValue
+    }
+
+    public func updateAndGet(_ diff: Int = 1) -> Int {
+        lock.wait()
+        defer { lock.signal() }
+        value += diff
+        return value
+    }
+}
+
 public final class TextNodeLayout: NSObject {
     public let attributedString: NSAttributedString?
     fileprivate let maximumNumberOfLines: Int
@@ -175,6 +205,23 @@ public final class TextNodeLayout: NSObject {
             }
         }
         self.hasRTL = hasRTL
+        
+        if self.attributedString != nil {
+            if !Thread.isMainThread && attributedString?.length ?? 0 > 10 {
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+            ASDisplayNode.sharedTracker().initInvoked("TextNodeLayout")
+        } else {
+            ASDisplayNode.sharedTracker().initInvoked("TextNodeLayout-nil")
+        }
+    }
+    
+    deinit {
+        if self.attributedString != nil {
+            ASDisplayNode.sharedTracker().deallocInvoked("TextNodeLayout")
+        } else {
+            ASDisplayNode.sharedTracker().deallocInvoked("TextNodeLayout-nil")
+        }
     }
     
     public func areLinesEqual(to other: TextNodeLayout) -> Bool {
@@ -825,6 +872,9 @@ public class TextNode: ASDisplayNode {
     
     private class func calculateLayout(attributedString: NSAttributedString?, minimumNumberOfLines: Int, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: UIColor?, constrainedSize: CGSize, alignment: NSTextAlignment, lineSpacingFactor: CGFloat, cutout: TextNodeCutout?, insets: UIEdgeInsets, lineColor: UIColor?, textShadowColor: UIColor?, textStroke: (UIColor, CGFloat)?) -> TextNodeLayout {
         if let attributedString = attributedString {
+//            if !Thread.isMainThread {
+//                Thread.sleep(forTimeInterval: 0.02)
+//            }
             
             let stringLength = attributedString.length
             

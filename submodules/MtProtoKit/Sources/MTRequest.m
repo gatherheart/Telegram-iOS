@@ -1,4 +1,6 @@
+#import <MtProtoKit/MTLogging.h>
 #import <MtProtoKit/MTRequest.h>
+#import <MtProtoKit/MTRequestContext.h>
 
 #import <MtProtoKit/MTRpcError.h>
 
@@ -42,6 +44,10 @@
     return another;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTRequestInternalId(%@)", @(_value)];
+}
+
 @end
 
 @implementation MTRequest
@@ -63,6 +69,15 @@
     _metadata = metadata;
     _shortMetadata = shortMetadata;
     _responseParser = [responseParser copy];
+}
+
+- (void)setRequestContext:(MTRequestContext *)requestContext {
+    _requestContext = requestContext;
+    MTLog(@"%@ set request context: %@", self, requestContext);
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTRequest#%p(meta %@, requestContext %@, internalId %@)", self, self.metadata, self.requestContext, self.internalId];
 }
 
 @end

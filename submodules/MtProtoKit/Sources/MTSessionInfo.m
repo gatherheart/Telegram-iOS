@@ -52,20 +52,22 @@
     NSMutableSet *_processedMessageIdsSet;
     NSMutableArray *_scheduledMessageConfirmations;
     NSMutableDictionary *_containerMessagesMappingDict;
+    
+    NSString * _hint;
 }
 
 @end
 
 @implementation MTSessionInfo
 
-- (instancetype)initWithRandomSessionIdAndContext:(MTContext *)context
+- (instancetype)initWithRandomSessionIdAndContext:(MTContext *)context hint:(NSString *)hint
 {
     int64_t randomId = 0;
     arc4random_buf(&randomId, sizeof(randomId));
-    return [self initWithSessionId:randomId context:context];
+    return [self initWithSessionId:randomId context:context hint:hint];
 }
 
-- (instancetype)initWithSessionId:(int64_t)sessionId context:(MTContext *)context
+- (instancetype)initWithSessionId:(int64_t)sessionId context:(MTContext *)context hint:(NSString *)hint
 {
     self = [super init];
     if (self != nil)
@@ -77,8 +79,21 @@
         
         _processedMessageIdsSet = [[NSMutableSet alloc] init];
         _containerMessagesMappingDict = [[NSMutableDictionary alloc] init];
+        
+        _hint = hint;
     }
+    
+    MTLog(@"%@ new instance", self);
+    
     return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTSessionInfo#%p(context #%p, sessionId %@, lastClientMessageId %@, seqNo %@, lastServerMessageId %@, hint %@)", self, _context, @(_sessionId), @(_lastClientMessageId), @(_seqNo), @(_lastServerMessageId), _hint];
+}
+
+- (void)dealloc {
+    MTLog(@"%@ dealloc", self);
 }
 
 - (int64_t)sessionId
@@ -92,8 +107,10 @@
     
     if (messageId < _lastClientMessageId)
     {
-        if (monotonityViolated != NULL)
+        if (monotonityViolated != NULL) {
             *monotonityViolated = true;
+            MTLog(@"%@: monotonity violated %@/%@", self, @(messageId), @(_lastClientMessageId));
+        }
     }
     
     if (messageId == _lastClientMessageId)
@@ -103,6 +120,11 @@
         messageId++;
     
     _lastClientMessageId = messageId;
+
+    if (monotonityViolated && *monotonityViolated) {
+        MTLog(@"%@: monotonity violated update last to %@", self, @(_lastClientMessageId));
+    }
+
     return messageId;
 }
 

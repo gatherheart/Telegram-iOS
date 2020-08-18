@@ -368,7 +368,7 @@ enum MultipartUploadError {
 }
 
 func multipartUpload(network: Network, postbox: Postbox, source: MultipartUploadSource, encrypt: Bool, tag: MediaResourceFetchTag?, hintFileSize: Int?, hintFileIsLarge: Bool) -> Signal<MultipartUploadResult, MultipartUploadError> {
-    return network.upload(tag: tag)
+    return network.upload(tag: tag, hint:"MultipartUpload.multipartUpload(source \(source), encrypt \(encrypt), tag \(tag), hintFileSite \(hintFileSize), hintFileIsLarge \(hintFileIsLarge)")
     |> mapToSignalPromotingError { download -> Signal<MultipartUploadResult, MultipartUploadError> in
         return Signal { subscriber in
             var encryptionKey: SecretFileEncryptionKey?

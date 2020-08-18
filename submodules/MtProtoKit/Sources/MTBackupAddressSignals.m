@@ -26,6 +26,7 @@ static NSData *base64_decode(NSString *str) {
     }
 }
 
+//XXX_hb
 @implementation MTBackupAddressSignals
 
 + (bool)checkIpData:(MTBackupDatacenterData *)data timestamp:(int32_t)timestamp source:(NSString *)source {
@@ -40,6 +41,8 @@ static NSData *base64_decode(NSString *str) {
 }
 
 + (MTSignal *)fetchBackupIpsResolveGoogle:(bool)isTesting phoneNumber:(NSString *)phoneNumber currentContext:(MTContext *)currentContext addressOverride:(NSString *)addressOverride {
+    MTLog(@"resolving from Google, is Testing %@, phoneNumber %@, context %p", @(isTesting), phoneNumber, currentContext);
+    
     NSArray *hosts = @[
         @[@"dns.google.com", @""],
         @[@"www.google.com", @"dns.google.com"],
@@ -105,6 +108,9 @@ static NSData *base64_decode(NSString *str) {
                     NSMutableData *finalData = [[NSMutableData alloc] initWithData:result];
                     [finalData setLength:256];
                     MTBackupDatacenterData *datacenterData = MTIPDataDecode(encryptionProvider, finalData, phoneNumber);
+                    
+                    MTLog(@"decoded new datacenterData: %@, phoneNumber %@, currentContext #%p", datacenterData, phoneNumber, currentContext);
+                    
                     if (datacenterData != nil && [self checkIpData:datacenterData timestamp:(int32_t)[currentContext globalTime] source:@"resolveGoogle"]) {
                         return [MTSignal single:datacenterData];
                     }
@@ -141,6 +147,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal *)fetchBackupIpsResolveCloudflare:(bool)isTesting phoneNumber:(NSString *)phoneNumber currentContext:(MTContext *)currentContext addressOverride:(NSString *)addressOverride {
+    MTLog(@"resolving from Cloudflare, is Testing %@, phoneNumber %@, context %p", @(isTesting), phoneNumber, currentContext);
+    
     id<EncryptionProvider> encryptionProvider = currentContext.encryptionProvider;
     
     NSArray *hosts = @[
@@ -206,6 +214,9 @@ static NSString *makeRandomPadding() {
                     NSMutableData *finalData = [[NSMutableData alloc] initWithData:result];
                     [finalData setLength:256];
                     MTBackupDatacenterData *datacenterData = MTIPDataDecode(encryptionProvider, finalData, phoneNumber);
+
+                    MTLog(@"decoded new datacenterData: %@, phoneNumber %@, currentContext #%p", datacenterData, phoneNumber, currentContext);
+                    
                     if (datacenterData != nil && [self checkIpData:datacenterData timestamp:(int32_t)[currentContext globalTime] source:@"resolveCloudflare"]) {
                         return [MTSignal single:datacenterData];
                     }
@@ -225,6 +236,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal *)fetchConfigFromAddress:(MTBackupDatacenterAddress *)address currentContext:(MTContext *)currentContext {
+    MTLog(@"fetch config from address %@, current context %@", address, currentContext);
+    
     MTApiEnvironment *apiEnvironment = [currentContext.apiEnvironment copy];
     
     apiEnvironment = [apiEnvironment withUpdatedSocksProxySettings:nil];
@@ -240,13 +253,13 @@ static NSString *makeRandomPadding() {
     apiEnvironment.disableUpdates = true;
     apiEnvironment.langPack = currentContext.apiEnvironment.langPack;
     
-    MTContext *context = [[MTContext alloc] initWithSerialization:currentContext.serialization encryptionProvider:currentContext.encryptionProvider apiEnvironment:apiEnvironment isTestingEnvironment:currentContext.isTestingEnvironment useTempAuthKeys:false];
+    MTContext *context = [[MTContext alloc] initWithSerialization:currentContext.serialization encryptionProvider:currentContext.encryptionProvider apiEnvironment:apiEnvironment isTestingEnvironment:currentContext.isTestingEnvironment useTempAuthKeys:false hint:[NSString stringWithFormat:@"fetchConfig from %@ for context %@", address, currentContext]];
     
     if (address.datacenterId != 0) {
         //context.keychain = currentContext.keychain;
     }
     
-    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:address.datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:address.datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"fetchConfigFromAddress %@", address]];
     if (address.datacenterId != 0) {
         mtProto.useTempAuthKeys = currentContext.useTempAuthKeys;
     }
@@ -269,6 +282,7 @@ static NSString *makeRandomPadding() {
              if (error == nil) {
                  __strong MTContext *strongCurrentContext = weakCurrentContext;
                  if (strongCurrentContext != nil) {
+                     MTLog(@"enumerating %@ addresslist after fetching config from %@, current context %@", @(result.addressList.count), address, strongCurrentContext);
                      [result.addressList enumerateKeysAndObjectsUsingBlock:^(NSNumber *nDatacenterId, NSArray *list, __unused BOOL *stop) {
                          MTDatacenterAddressSet *addressSet = [[MTDatacenterAddressSet alloc] initWithAddressList:list];
                          
@@ -277,7 +291,7 @@ static NSString *makeRandomPadding() {
                          if (currentAddressSet == nil || ![addressSet isEqual:currentAddressSet])
                          {
                              if (MTLogEnabled()) {
-                                 MTLog(@"[Backup address fetch: updating datacenter %d address set to %@]", [nDatacenterId intValue], addressSet);
+                                 MTLog(@"Backup address fetch: updating datacenterId %d address set to %@ after fetching config from %@", [nDatacenterId intValue], addressSet, address);
                              }
                              
                              [strongCurrentContext updateAddressSetForDatacenterWithId:[nDatacenterId integerValue] addressSet:addressSet forceUpdateSchemes:true];
@@ -302,6 +316,8 @@ static NSString *makeRandomPadding() {
 }
 
 + (MTSignal * _Nonnull)fetchBackupIps:(bool)isTestingEnvironment currentContext:(MTContext * _Nonnull)currentContext additionalSource:(MTSignal * _Nullable)additionalSource phoneNumber:(NSString * _Nullable)phoneNumber {
+    MTLog(@"isTesting %@, context %p, phoneNumber %@", @(isTestingEnvironment), currentContext, phoneNumber);
+    
     NSMutableArray *signals = [[NSMutableArray alloc] init];
     [signals addObject:[self fetchBackupIpsResolveGoogle:isTestingEnvironment phoneNumber:phoneNumber currentContext:currentContext addressOverride:currentContext.apiEnvironment.accessHostOverride]];
     [signals addObject:[self fetchBackupIpsResolveCloudflare:isTestingEnvironment phoneNumber:phoneNumber currentContext:currentContext addressOverride:currentContext.apiEnvironment.accessHostOverride]];
@@ -330,6 +346,7 @@ static NSString *makeRandomPadding() {
                 [signals addObject:signal];
                 delay += 5.0;
             }
+            MTLog(@"merge signals %@ from data %@", @(signals.count), data);
             return [[MTSignal mergeSignals:signals] take:1];
         }
         return [MTSignal complete];

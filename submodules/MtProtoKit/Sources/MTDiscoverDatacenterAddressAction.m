@@ -6,6 +6,7 @@
 #import <MtProtoKit/MTDatacenterAddressSet.h>
 #import <MtProtoKit/MTRequestMessageService.h>
 #import <MtProtoKit/MTRequest.h>
+#import <MtProtoKit/MTLogging.h>
 
 @interface MTDiscoverDatacenterAddressAction () <MTContextChangeListener>
 {
@@ -22,6 +23,7 @@
 
 @end
 
+//XXX_hb
 @implementation MTDiscoverDatacenterAddressAction
 
 - (instancetype)init
@@ -66,6 +68,8 @@
                     *stop = true;
             }
         }];
+
+        MTLog(@"%@: datacenterAddressIsKnown %@, currentDatacenterId %@", self, @(datacenterAddressIsKnown), @(currentDatacenterId));
         
         if (datacenterAddressIsKnown)
             [self complete];
@@ -90,7 +94,7 @@
     {
         if ([context authInfoForDatacenterWithId:_targetDatacenterId selector:MTDatacenterAuthInfoSelectorPersistent] != nil)
         {
-            _mtProto = [[MTProto alloc] initWithContext:context datacenterId:_targetDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+            _mtProto = [[MTProto alloc] initWithContext:context datacenterId:_targetDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"askForAnAddressDatacenterWithId"];
             _mtProto.useTempAuthKeys = useTempAuthKeys;
             _requestService = [[MTRequestMessageService alloc] initWithContext:_context];
             _requestService.forceBackgroundRequests = true;
@@ -114,6 +118,8 @@
                         [strongSelf getConfigFailed];
                 }
             }];
+
+            MTLog(@"%@: targetDatacenterId %@", self, @(_targetDatacenterId));
             
             [_requestService addRequest:request];
         }

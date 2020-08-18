@@ -242,6 +242,11 @@ final class SharedApplicationContext {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         precondition(!testIsLaunched)
         testIsLaunched = true
+
+        setTelegramDisplayLogger({ what, fileName, functionName, lineNumber in
+            Logger.shared.log("Display", what as String, fileName:fileName, functionName:functionName, lineNumber:lineNumber)
+            Logger.shared.shortLog("Display", what as String)
+        })
         
         let _ = voipTokenPromise.get().start(next: { token in
             self.deviceToken.set(.single(token))
@@ -429,7 +434,7 @@ final class SharedApplicationContext {
         }
         
         if isDebugConfiguration || buildConfig.isInternalBuild {
-            LoggingSettings.defaultSettings = LoggingSettings(logToFile: true, logToConsole: false, redactSensitiveData: true)
+            LoggingSettings.defaultSettings = LoggingSettings(logToFile: true, logToConsole: true, redactSensitiveData: false)
         } else {
             LoggingSettings.defaultSettings = LoggingSettings(logToFile: false, logToConsole: false, redactSensitiveData: true)
         }

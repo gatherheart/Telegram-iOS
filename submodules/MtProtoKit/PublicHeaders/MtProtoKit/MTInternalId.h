@@ -46,6 +46,9 @@
     return another; \
 } \
 \
+- (NSString *)description {\
+    return [NSString stringWithFormat:@"%@(%@)", [self class], @(_value)];\
+}\
 @end
 
 #endif

@@ -13,4 +13,8 @@
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTRpcResultMessage#%p(requestMessagId %@, data %@)", self, @(_requestMessageId), _data];
+}
+
 @end

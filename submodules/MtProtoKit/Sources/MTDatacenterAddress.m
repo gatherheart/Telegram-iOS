@@ -116,7 +116,7 @@
 
 - (NSString *)description
 {
-    return [[NSString alloc] initWithFormat:@"%@:%d (media: %@, cdn: %@, static: %@, secret: %@)", _ip == nil ? _host : _ip, (int)_port, _preferForMedia ? @"yes" : @"no", _cdn ? @"yes" : @"no", _preferForProxy ? @"yes" : @"no", _secret];
+    return [[NSString alloc] initWithFormat:@"%@:%d#(media %@, cdn %@, preferForProxy %@, secret %@, restrictToTcp %@)", _ip == nil ? _host : _ip, (int)_port, _preferForMedia ? @"yes" : @"no", _cdn ? @"yes" : @"no", _preferForProxy ? @"yes" : @"no", _secret ?: @"", _restrictToTcp ? @"yes" : @"no"];
 }
 
 @end

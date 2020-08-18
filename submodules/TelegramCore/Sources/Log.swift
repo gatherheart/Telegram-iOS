@@ -43,12 +43,12 @@ public func trace1(_ domain: String, what: @autoclosure() -> String) {
 }
 
 public func registerLoggingFunctions() {
-    setBridgingTraceFunction({ domain, what in
+    setBridgingTraceFunction({ domain, what, fileName, functionName, lineNumber in
         if let what = what {
             if let domain = domain {
-                Logger.shared.log(domain, what as String)
+              Logger.shared.log(domain, what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
             } else {
-                Logger.shared.log("", what as String)
+              Logger.shared.log("", what as String, fileName: fileName!, functionName: functionName!, lineNumber: Int(lineNumber))
             }
         }
     })
@@ -67,6 +67,21 @@ public func registerLoggingFunctions() {
     })
 }
 
+public func toAddressString(_ a: AnyObject?, suffix: Int = 0) -> String {
+    let ret: String;
+    if let a = a {
+        ret = "\(Unmanaged.passUnretained(a).toOpaque())"
+    } else {
+        ret = "0"
+    }
+    
+    if suffix > 0 && ret.count > suffix {
+        return String(ret.suffix(suffix))
+    }
+    
+    return ret
+}
+
 private var sharedLogger: Logger?
 
 private let binaryEventMarker: UInt64 = 0xcadebabef00dcafe
@@ -81,6 +96,9 @@ public final class Logger {
     private let basePath: String
     private var file: (ManagedFile, Int)?
     private var shortFile: (ManagedFile, Int)?
+    
+    private let filterLogByTag: Bool = false
+    private let tagWhiteList: Set = ["Network", "MT"]
     
     public var logToFile: Bool = true {
         didSet {
@@ -244,8 +262,12 @@ public final class Logger {
         }
     }
     
-    public func log(_ tag: String, _ what: @autoclosure () -> String) {
+    public func log(_ tag: String, _ what: @autoclosure () -> String, fileName: String = #file, functionName: String = #function, lineNumber: Int = #line) {
         if !self.logToFile && !self.logToConsole {
+            return
+        }
+        
+        if filterLogByTag && !tagWhiteList.contains(tag) {
             return
         }
         
@@ -262,9 +284,24 @@ public final class Logger {
         
         var consoleContent: String?
         if self.logToConsole {
-            let content = String(format: "[%@] %d-%d-%d %02d:%02d:%02d.%03d %@", arguments: [tag, Int(timeinfo.tm_year) + 1900, Int(timeinfo.tm_mon + 1), Int(timeinfo.tm_mday), Int(timeinfo.tm_hour), Int(timeinfo.tm_min), Int(timeinfo.tm_sec), Int(milliseconds), string])
-            consoleContent = content
-            print(content)
+          var thread = ""
+          if let name = Thread.current.name {
+            thread = name
+          }
+          if thread.count == 0 {
+            thread = toAddressString(Thread.current, suffix: 4)
+          }
+          
+          let timestamp = String(format:"%d-%d-%d %02d:%02d:%02d.%03d", Int(timeinfo.tm_year) + 1900,
+                                                                         Int(timeinfo.tm_mon + 1),
+                                                                         Int(timeinfo.tm_mday),
+                                                                         Int(timeinfo.tm_hour),
+                                                                         Int(timeinfo.tm_min),
+                                                                         Int(timeinfo.tm_sec),
+                                                                         Int(milliseconds))
+            let content = "\(timestamp) (\(tag))(\(thread))(\((fileName as NSString).lastPathComponent):\(lineNumber) \(functionName)): {\(string)}"
+          consoleContent = content
+          print(content)
         }
         
         if self.logToFile {

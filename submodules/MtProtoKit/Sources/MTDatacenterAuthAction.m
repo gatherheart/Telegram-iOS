@@ -48,9 +48,15 @@
     [self cleanup];
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTDatacenterAuthAction#%p(context #%p, datacenterId %@, isCdn %@)", self, _context, @(_datacenterId), @(_isCdn)];
+}
+
 - (void)execute:(MTContext *)context datacenterId:(NSInteger)datacenterId {
     _datacenterId = datacenterId;
     _context = context;
+    
+    MTLog(@"%@ execute", self);
     
     if (_datacenterId != 0 && context != nil)
     {
@@ -64,7 +70,7 @@
         if (alreadyCompleted) {
             [self complete];
         } else {
-            _authMtProto = [[MTProto alloc] initWithContext:context datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+            _authMtProto = [[MTProto alloc] initWithContext:context datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"MTDatacenterAuthAction"]];
             _authMtProto.cdn = _isCdn;
             _authMtProto.useUnauthorizedMode = true;
             bool tempAuth = false;
@@ -116,7 +122,7 @@
             if (mainContext != nil) {
                 MTDatacenterAuthInfo *persistentAuthInfo = [mainContext authInfoForDatacenterWithId:_datacenterId selector:MTDatacenterAuthInfoSelectorPersistent];
                 if (persistentAuthInfo != nil) {
-                    _bindMtProto = [[MTProto alloc] initWithContext:mainContext datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+                    _bindMtProto = [[MTProto alloc] initWithContext:mainContext datacenterId:_datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"completeWithAuthKey"];
                     _bindMtProto.cdn = false;
                     _bindMtProto.useUnauthorizedMode = false;
                     _bindMtProto.useTempAuthKeys = true;
@@ -179,6 +185,7 @@
 
 - (void)cancel
 {
+    MTLog(@"%@ cancel", self);
     [self cleanup];
 }
 
@@ -186,10 +193,12 @@
     if (_completion) {
         _completion(self, true);
     }
+    MTLog(@"%@ complete", self);
 }
 
 - (void)fail
 {
+    MTLog(@"%@ fail", self);
     if (_completion) {
         _completion(self, false);
     }

@@ -15,4 +15,8 @@
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTRequestContext#%p(messageId %@, seq %@, transactionId %@, ackId %@)", self, @(_messageId), @(_messageSeqNo), _transactionId, @(_quickAckId)];
+}
+
 @end

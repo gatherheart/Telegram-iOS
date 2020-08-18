@@ -7,6 +7,7 @@
 #import <MtProtoKit/MTProto.h>
 #import <MtProtoKit/MTRequestMessageService.h>
 #import <MtProtoKit/MTRequest.h>
+#import <MtProtoKit/MTLogging.h>
 #import "MTBuffer.h"
 
 @interface MTDatacenterTransferAuthAction () <MTContextChangeListener>
@@ -47,6 +48,8 @@
     _destinationDatacenterId = destinationDatacenterId;
     _context = context;
     _authToken = authToken;
+
+    MTLog(@"%@, masterDatacenterId %@, destinationDatacenterId %@, authToken %@, context %@", self, @(masterDatacenterId), @(destinationDatacenterId), authToken, context);
     
     if (_destinationDatacenterId != 0 && context != nil && _authToken != nil)
     {
@@ -84,7 +87,7 @@
         return;
     }
     
-    _sourceDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:sourceDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    _sourceDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:sourceDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:@"beginTransferFromDatacenterId"];
     _sourceDatacenterMtProto.useTempAuthKeys = context.useTempAuthKeys;
     
     MTRequestMessageService *requestService = [[MTRequestMessageService alloc] initWithContext:context];
@@ -122,7 +125,7 @@
     _sourceDatacenterMtProto = nil;
     
     MTContext *context = _context;
-    _destinationDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:_destinationDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    _destinationDatacenterMtProto = [[MTProto alloc] initWithContext:context datacenterId:_destinationDatacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"beginTransferWithId#%@", @(dataId)]];
     _destinationDatacenterMtProto.canResetAuthData = true;
     _destinationDatacenterMtProto.useTempAuthKeys = context.useTempAuthKeys;
     
@@ -164,6 +167,8 @@
 
 - (void)cancel
 {
+    MTLog(@"%@ cancel", self);
+
     [self cleanup];
     
     [self fail];
@@ -171,6 +176,8 @@
 
 - (void)complete
 {
+    MTLog(@"%@ complete", self);
+
     id<MTDatacenterTransferAuthActionDelegate> delegate = _delegate;
     if ([delegate respondsToSelector:@selector(datacenterTransferAuthActionCompleted:)])
         [delegate datacenterTransferAuthActionCompleted:self];
@@ -178,6 +185,8 @@
 
 - (void)fail
 {
+    MTLog(@"%@ fail", self);
+
     id<MTDatacenterTransferAuthActionDelegate> delegate = _delegate;
     if ([delegate respondsToSelector:@selector(datacenterTransferAuthActionCompleted:)])
         [delegate datacenterTransferAuthActionCompleted:self];

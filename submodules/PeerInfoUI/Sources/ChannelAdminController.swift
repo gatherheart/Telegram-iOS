@@ -127,7 +127,7 @@ private enum ChannelAdminEntryStableId: Hashable {
                 } else {
                     return false
                 }
-            case let right(flags):
+            case let right(flags): //XXX hb
                 if case .right(flags) = rhs {
                     return true
                 } else {

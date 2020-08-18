@@ -31,6 +31,7 @@ public struct AccountRecordId: Comparable, Hashable, Codable {
 public func generateAccountRecordId() -> AccountRecordId {
     var id: Int64 = 0
     arc4random_buf(&id, 8)
+    print("generateAccountRecordId: \(id)")
     return AccountRecordId(rawValue: id)
 }
 

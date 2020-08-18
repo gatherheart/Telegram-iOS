@@ -302,6 +302,9 @@ struct ctr_state {
     NSMutableArray<MTTcpSendData *> *_pendingDataQueue;
     NSMutableData *_receivedDataBuffer;
     MTTcpReceiveData *_pendingReceiveData;
+    
+    MTContext * __weak _context;
+    NSString * _hint;
 }
 
 @property (nonatomic) int64_t packetHeadDecodeToken;
@@ -322,7 +325,7 @@ struct ctr_state {
     return queue;
 }
 
-- (instancetype)initWithContext:(MTContext *)context datacenterId:(NSInteger)datacenterId scheme:(MTTransportScheme *)scheme interface:(NSString *)interface usageCalculationInfo:(MTNetworkUsageCalculationInfo *)usageCalculationInfo
+- (instancetype)initWithContext:(MTContext *)context datacenterId:(NSInteger)datacenterId scheme:(MTTransportScheme *)scheme interface:(NSString *)interface usageCalculationInfo:(MTNetworkUsageCalculationInfo *)usageCalculationInfo hint:(NSString *)hint
 {
 #ifdef DEBUG
     NSAssert(scheme != nil, @"scheme should not be nil");
@@ -331,6 +334,9 @@ struct ctr_state {
     self = [super init];
     if (self != nil)
     {
+        _context = context;
+        _hint = hint;
+        
         _internalId = [[MTInternalId(MTTcpConnection) alloc] init];
         
         _encryptionProvider = context.encryptionProvider;
@@ -387,11 +393,20 @@ struct ctr_state {
         _pendingDataQueue = [[NSMutableArray alloc] init];
         _receivedDataBuffer = [[NSMutableData alloc] init];
     }
+    
+    MTLog(@"%@ new instance, datacenterId %@, datacenterTag %@ scheme %@", self, @(datacenterId), @(_datacenterTag), _scheme);
+    
     return self;
+}
+
+- (NSString *)description {
+    return[NSString stringWithFormat:@"MTTcpConnection#%p(context#%p, datacenterIdTag %@, hint (%@), scheme (%@))", self, _context, @(_datacenterTag), _hint, _scheme];
 }
 
 - (void)dealloc
 {
+    MTLog(@"%@ dealloc", self);
+    
     GCDAsyncSocket *socket = _socket;
     socket.delegate = nil;
     _socket = nil;
@@ -431,7 +446,9 @@ struct ctr_state {
     {
         if (_socket == nil)
         {
-            _socket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:[[MTTcpConnection tcpQueue] nativeQueue]];
+            MTLog(@"%@ start", self);
+            
+            _socket = [[GCDAsyncSocket alloc] initWithDelegate:self delegateQueue:[[MTTcpConnection tcpQueue] nativeQueue] hint:[self description]];
             _socket.usageCalculationInfo = _usageCalculationInfo;
             
             NSString *addressIp = _scheme.address.ip;
@@ -494,20 +511,20 @@ struct ctr_state {
                     if (MTLogEnabled()) {
                         if (strongSelf->_socksIp != nil) {
                             if (strongSelf->_socksUsername.length == 0) {
-                                MTLog(@"[MTTcpConnection#%x connecting to %@:%d via %@:%d]", (int)strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_socksIp, (int)strongSelf->_socksPort);
+                                MTLog(@"%@ connecting to %@:%d via %@:%d", strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_socksIp, (int)strongSelf->_socksPort);
                             } else {
-                                MTLog(@"[MTTcpConnection#%x connecting to %@:%d via %@:%d using %@:%@]", (int)strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_socksIp, (int)strongSelf->_socksPort, strongSelf->_socksUsername, strongSelf->_socksPassword);
+                                MTLog(@"%@ connecting to %@:%d via %@:%d using %@:%@", strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_socksIp, (int)strongSelf->_socksPort, strongSelf->_socksUsername, strongSelf->_socksPassword);
                             }
                         } else if (strongSelf->_mtpIp != nil) {
-                            MTLog(@"[MTTcpConnection#%x connecting to %@:%d via mtp://%@:%d:%@]", (int)strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_mtpIp, (int)strongSelf->_mtpPort, strongSelf->_mtpSecret);
+                            MTLog(@"%@ connecting to %@:%d via mtp://%@:%d:%@", strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port, strongSelf->_mtpIp, (int)strongSelf->_mtpPort, strongSelf->_mtpSecret);
                         } else {
-                            MTLog(@"[MTTcpConnection#%x connecting to %@:%d]", (int)strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port);
+                            MTLog(@"%@ connecting to %@:%d", strongSelf, strongSelf->_scheme.address.ip, (int)strongSelf->_scheme.address.port);
                         }
                     }
                     
                     __autoreleasing NSError *error = nil;
                     if (![strongSelf->_socket connectToHost:connectionData.ip onPort:connectionData.port viaInterface:strongSelf->_interface withTimeout:12 error:&error] || error != nil) {
-                        [strongSelf closeAndNotifyWithError:true];
+                        [strongSelf closeAndNotifyWithError:true hint:[NSString stringWithFormat:@"connectToHost %@", error]];
                     } else if (strongSelf->_socksIp == nil) {
                         if (strongSelf->_mtpIp != nil && [strongSelf->_mtpSecret isKindOfClass:[MTProxySecretType2 class]]) {
                             MTProxySecretType2 *secret = (MTProxySecretType2 *)(strongSelf->_mtpSecret);
@@ -649,14 +666,16 @@ struct ctr_state {
     [[MTTcpConnection tcpQueue] dispatchOnQueue:^
     {
         if (!_closed)
-            [self closeAndNotifyWithError:false];
+            [self closeAndNotifyWithError:false hint:@"stop"];
     }];
 }
 
-- (void)closeAndNotifyWithError:(bool)error
+- (void)closeAndNotifyWithError:(bool)error hint:(NSString *)hint
 {
     [[MTTcpConnection tcpQueue] dispatchOnQueue:^
     {
+        MTLog(@"%@ closeAndNotifyWithError, closed %@, error %@, hint %@", self, @(_closed), @(error), hint);
+        
         if (!_closed)
         {
             _closed = true;
@@ -876,7 +895,7 @@ struct ctr_state {
                 }
             } else {
                 if (MTLogEnabled()) {
-                    MTLog(@"***** %s: can't send data: connection is not opened", __PRETTY_FUNCTION__);
+                    MTLog(@"%@ can't send data: connection is not opened", self);
                 }
                 
                 if (dataToSend.completion) {
@@ -913,9 +932,9 @@ struct ctr_state {
     _responseTimeoutTimer = nil;
     
     if (MTLogEnabled()) {
-        MTLog(@"[MTTcpConnection#%x response timeout]", (int)self);
+        MTLog(@"%@ response timeout", self);
     }
-    [self closeAndNotifyWithError:true];
+    [self closeAndNotifyWithError:true hint:@"response timeout"];
 }
 
 - (void)socket:(GCDAsyncSocket *)__unused socket didReadPartialDataOfLength:(NSUInteger)partialLength tag:(long)__unused tag
@@ -971,9 +990,9 @@ struct ctr_state {
         }
         default: {
             if (MTLogEnabled()) {
-                MTLog(@"***** %s: invalid socks request address type", __PRETTY_FUNCTION__);
+                MTLog(@"%@ invalid socks request address type", self);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks request address type"];
             return;
         }
     }
@@ -993,9 +1012,9 @@ struct ctr_state {
     if (tag == MTTcpSocksLogin) {
         if (rawData.length != sizeof(struct socks5_ident_resp)) {
             if (MTLogEnabled()) {
-                MTLog(@"***** %s: invalid socks5 login response length", __PRETTY_FUNCTION__);
+                MTLog(@"%@ invalid socks5 login response length", self);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks5 login response length"];
             return;
         }
         
@@ -1003,18 +1022,18 @@ struct ctr_state {
         [rawData getBytes:&resp length:sizeof(struct socks5_ident_resp)];
         if (resp.Version != 5) {
             if (MTLogEnabled()) {
-                MTLog(@"***** %s: invalid socks response version", __PRETTY_FUNCTION__);
+                MTLog(@"%@ invalid socks response version", self);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks response version"];
             return;
         }
         
         if (resp.Method == 0xFF)
         {
             if (MTLogEnabled()) {
-                MTLog(@"***** %s: invalid socks response method", __PRETTY_FUNCTION__);
+                MTLog(@"%@ invalid socks response method", self);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks response method"];
             return;
         }
         
@@ -1047,16 +1066,16 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid socks5 response length", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks response length"];
             return;
         }
         [rawData getBytes:&resp length:4];
         
         if (resp.Reply != 0x00) {
             if (MTLogEnabled()) {
-                MTLog(@"***** %x %s: socks5 connect failed, error 0x%02x", (int)self, __PRETTY_FUNCTION__, resp.Reply);
+                MTLog(@"***** %p %s: socks5 connect failed, error 0x%02x", self, __PRETTY_FUNCTION__, resp.Reply);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"socks5 connect failed"];
             return;
         }
         
@@ -1077,7 +1096,7 @@ struct ctr_state {
                 if (MTLogEnabled()) {
                     MTLog(@"***** %s: socks bound to unknown address type", __PRETTY_FUNCTION__);
                 }
-                [self closeAndNotifyWithError:true];
+                [self closeAndNotifyWithError:true hint:@"socks bound to unknown address type"];
                 return;
             }
         }
@@ -1088,7 +1107,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid socks5 response domain name data length", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks response domain name data length"];
             return;
         }
         
@@ -1128,7 +1147,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid socks5 auth response", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid socks5 auth response"];
             return;
         }
         
@@ -1140,7 +1159,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response length", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response length"];
             return;
         }
         
@@ -1151,7 +1170,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response header", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response header"];
             return;
         }
         
@@ -1162,7 +1181,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response header length marker", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response header length marker"];
             return;
         }
         
@@ -1178,7 +1197,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response1 part", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello resposel part"];
             return;
         }
         
@@ -1189,7 +1208,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response header length marker", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response header length marker"];
             return;
         }
         
@@ -1209,7 +1228,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response total length", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response total length"];
             return;
         }
         
@@ -1228,7 +1247,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid hello response random", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid hello response random"];
             return;
         }
         
@@ -1248,7 +1267,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid complex header length", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid complex header length"];
             return;
         }
         
@@ -1259,7 +1278,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid complex header", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid complex header"];
             return;
         }
         
@@ -1270,7 +1289,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid complex header length marker", __PRETTY_FUNCTION__);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid complex header length marker"];
             return;
         }
         
@@ -1354,7 +1373,7 @@ struct ctr_state {
                 if (MTLogEnabled()) {
                     MTLog(@"***** %s: invalid quarter length marker (%" PRIu8 ")", __PRETTY_FUNCTION__, quarterLengthMarker);
                 }
-                [self closeAndNotifyWithError:true];
+                [self closeAndNotifyWithError:true hint:@"invalid quater length marker"];
             }
         }
     } else if (tag == MTTcpReadTagPacketLongLength) {
@@ -1369,7 +1388,7 @@ struct ctr_state {
             if (MTLogEnabled()) {
                 MTLog(@"***** %s: invalid quarter length (%" PRIu32 ")", __PRETTY_FUNCTION__, quarterLength);
             }
-            [self closeAndNotifyWithError:true];
+            [self closeAndNotifyWithError:true hint:@"invalid quarter length"];
         } else {
             NSUInteger packetBodyLength = quarterLength * 4;
             if (packetBodyLength >= MTTcpProgressCalculationThreshold) {
@@ -1405,9 +1424,9 @@ struct ctr_state {
         } else {
             if (length > 16 * 1024 * 1024) {
                 if (MTLogEnabled()) {
-                    MTLog(@"[MTTcpConnection#%x received invalid length %d]", (int)self, length);
+                    MTLog(@"%@ received invalid length %d", self, length);
                 }
-                [self closeAndNotifyWithError:true];
+                [self closeAndNotifyWithError:true hint:@"received invalid length"];
             } else {
                 NSUInteger packetBodyLength = (NSUInteger)length;
                 
@@ -1481,7 +1500,7 @@ struct ctr_state {
                 }
             } else if (header == 0 && packetData.length < 16) {
                 if (MTLogEnabled()) {
-                    MTLog(@"[MTTcpConnection#%x received nop packet]", (int)self);
+                    MTLog(@"%@ received nop packet", self);
                 }
                 ignorePacket = true;
             }
@@ -1525,6 +1544,8 @@ struct ctr_state {
              
 - (void)socket:(GCDAsyncSocket *)__unused socket didConnectToHost:(NSString *)__unused host port:(uint16_t)__unused port
 {
+    MTLog(@"%@ did connect to %@:%@", self, host, @(port));
+    
     if (_socksIp != nil) {
         
     } else {
@@ -1540,16 +1561,16 @@ struct ctr_state {
 {
     if (error != nil) {
         if (MTLogEnabled()) {
-            MTLog(@"[MTTcpConnection#%x disconnected from %@ (%@)]", (int)self, _scheme.address.ip, error);
+            MTLog(@"%@ disconnected from %@ (%@)", self, _scheme.address.ip, error);
         }
     }
     else {
         if (MTLogEnabled()) {
-            MTLog(@"[MTTcpConnection#%x disconnected from %@]", (int)self, _scheme.address.ip);
+            MTLog(@"%@ disconnected from %@", self, _scheme.address.ip);
         }
     }
     
-    [self closeAndNotifyWithError:error != nil];
+    [self closeAndNotifyWithError:error != nil hint:[error description]];
 }
 
 @end

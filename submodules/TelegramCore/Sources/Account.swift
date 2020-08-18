@@ -75,6 +75,8 @@ public class UnauthorizedAccount {
     public let shouldBeServiceTaskMaster = Promise<AccountServiceTaskMasterMode>()
     
     init(networkArguments: NetworkInitializationArguments, id: AccountRecordId, rootPath: String, basePath: String, testingEnvironment: Bool, postbox: Postbox, network: Network, shouldKeepAutoConnection: Bool = true) {
+        Logger.shared.log("Network", "new instance, id \(id), rootPath \(rootPath), basePath \(basePath), network#\(toAddressString(network)), shouldKeepAytoConnection \(shouldKeepAutoConnection)")
+        
         self.networkArguments = networkArguments
         self.id = id
         self.rootPath = rootPath
@@ -128,6 +130,7 @@ public class UnauthorizedAccount {
                 }
             }
             |> mapToSignal { (localizationSettings, proxySettings, networkSettings) -> Signal<UnauthorizedAccount, NoError> in
+                Logger.shared.log("Network", "calling initializedNetwork datacenterId \(masterDatacenterId)")
                 return initializedNetwork(accountId: self.id, arguments: self.networkArguments, supplementary: false, datacenterId: Int(masterDatacenterId), keychain: keychain, basePath: self.basePath, testingEnvironment: self.testingEnvironment, languageCode: localizationSettings?.primaryComponent.languageCode, proxySettings: proxySettings, networkSettings: networkSettings, phoneNumber: nil)
                 |> map { network in
                     let updated = UnauthorizedAccount(networkArguments: self.networkArguments, id: self.id, rootPath: self.rootPath, basePath: self.basePath, testingEnvironment: self.testingEnvironment, postbox: self.postbox, network: network)
@@ -227,6 +230,8 @@ public func accountWithId(accountManager: AccountManager, networkArguments: Netw
     
     let postbox = openPostbox(basePath: path + "/postbox", seedConfiguration: telegramPostboxSeedConfiguration, encryptionParameters: encryptionParameters, timestampForAbsoluteTimeBasedOperations: Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))
     
+    Logger.shared.log("Network", "path \(path), shouldKeepAutoConnection \(shouldKeepAutoConnection)")
+    
     return postbox
     |> mapToSignal { result -> Signal<AccountResult, NoError> in
         switch result {
@@ -257,6 +262,7 @@ public func accountWithId(accountManager: AccountManager, networkArguments: Netw
                         if let accountState = accountState {
                             switch accountState {
                                 case let unauthorizedState as UnauthorizedAccountState:
+                                    Logger.shared.log("Network", "calling initializedNetwork(UnauthorizedAccountState): datacenterId \(unauthorizedState.masterDatacenterId), basePath \(path)")
                                     return initializedNetwork(accountId: id, arguments: networkArguments, supplementary: supplementary, datacenterId: Int(unauthorizedState.masterDatacenterId), keychain: keychain, basePath: path, testingEnvironment: unauthorizedState.isTestingEnvironment, languageCode: localizationSettings?.primaryComponent.languageCode, proxySettings: proxySettings, networkSettings: networkSettings, phoneNumber: nil)
                                         |> map { network -> AccountResult in
                                             return .unauthorized(UnauthorizedAccount(networkArguments: networkArguments, id: id, rootPath: rootPath, basePath: path, testingEnvironment: unauthorizedState.isTestingEnvironment, postbox: postbox, network: network, shouldKeepAutoConnection: shouldKeepAutoConnection))
@@ -266,6 +272,7 @@ public func accountWithId(accountManager: AccountManager, networkArguments: Netw
                                         return (transaction.getPeer(authorizedState.peerId) as? TelegramUser)?.phone
                                     }
                                     |> mapToSignal { phoneNumber in
+                                        Logger.shared.log("Network", "calling initializedNetwork(AuthorizedAccountState): datacenterId \(authorizedState.masterDatacenterId), basePath \(path), phoneNumber \(phoneNumber)")
                                         return initializedNetwork(accountId: id, arguments: networkArguments, supplementary: supplementary, datacenterId: Int(authorizedState.masterDatacenterId), keychain: keychain, basePath: path, testingEnvironment: authorizedState.isTestingEnvironment, languageCode: localizationSettings?.primaryComponent.languageCode, proxySettings: proxySettings, networkSettings: networkSettings, phoneNumber: phoneNumber)
                                         |> map { network -> AccountResult in
                                             return .authorized(Account(accountManager: accountManager, id: id, basePath: path, testingEnvironment: authorizedState.isTestingEnvironment, postbox: postbox, network: network, networkArguments: networkArguments, peerId: authorizedState.peerId, auxiliaryMethods: auxiliaryMethods, supplementary: supplementary))
@@ -275,6 +282,8 @@ public func accountWithId(accountManager: AccountManager, networkArguments: Netw
                                     assertionFailure("Unexpected accountState \(accountState)")
                             }
                         }
+                        
+                        Logger.shared.log("Network", "calling initializedNetwork(fallback): datacenterId \(2), basePath \(path)")
                         
                         return initializedNetwork(accountId: id, arguments: networkArguments, supplementary: supplementary, datacenterId: 2, keychain: keychain, basePath: path, testingEnvironment: beginWithTestingEnvironment, languageCode: localizationSettings?.primaryComponent.languageCode, proxySettings: proxySettings, networkSettings: networkSettings, phoneNumber: nil)
                         |> map { network -> AccountResult in
@@ -937,6 +946,9 @@ public class Account {
             self?.postSmallLogIfNeeded()
         }
         
+        let selfAddress = toAddressString(self)
+        Logger.shared.log("Network", "new instance #\(selfAddress): id \(id), basePath \(basePath), peerId \(peerId)")
+        
         let networkStateQueue = Queue()
         
         let networkStateSignal = combineLatest(queue: networkStateQueue, self.stateManager.isUpdating, network.connectionStatus/*, delayNetworkStatus*/)
@@ -1133,6 +1145,7 @@ public class Account {
     }
     
     deinit {
+        Logger.shared.log("Network", "dealloc #\(toAddressString(self))")
         self.managedContactsDisposable.dispose()
         self.managedStickerPacksDisposable.dispose()
         self.managedServiceViewsDisposable.dispose()
@@ -1240,6 +1253,7 @@ public func setupAccount(_ account: Account, fetchCachedResourceRepresentation: 
     account.postbox.mediaBox.preFetchedResourcePath = preFetchedResourcePath
     account.postbox.mediaBox.fetchResource = { [weak account] resource, intervals, parameters -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> in
         if let strongAccount = account {
+            Logger.shared.log("Network", "account \(strongAccount), resource \(resource), intervals \(intervals), parameters \(parameters)")
             if let result = fetchResource(account: strongAccount, resource: resource, intervals: intervals, parameters: parameters) {
                 return result
             } else if let result = strongAccount.auxiliaryMethods.fetchResource(strongAccount, resource, intervals, parameters) {

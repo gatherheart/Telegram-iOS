@@ -277,7 +277,7 @@ final class ChatHistoryPreloadManager {
         self.postbox = postbox
         self.network = network
         self.accountPeerId = accountPeerId
-        self.download.set(network.background())
+        self.download.set(network.background(hint: "ChatHitoryPreloadManager.init(accountPeerId \(accountPeerId)"))
         self.preloadItemsSignal = preloadItemsSignal
         
         let queue = Queue.mainQueue()

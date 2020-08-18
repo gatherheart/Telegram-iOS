@@ -108,7 +108,7 @@ dispatch_block_t fetchImage(BuildConfig *buildConfig, AccountProxyConnection * _
         apiEnvironment = [apiEnvironment withUpdatedSocksProxySettings:[[MTSocksProxySettings alloc] initWithIp:proxyConnection.host port:(uint16_t)proxyConnection.port username:proxyConnection.username password:proxyConnection.password secret:proxyConnection.secret]];
     }
     
-    MTContext *context = [[MTContext alloc] initWithSerialization:serialization encryptionProvider:[[EmptyEncryptionProvider alloc] init] apiEnvironment:apiEnvironment isTestingEnvironment:account.isTestingEnvironment useTempAuthKeys:true];
+    MTContext *context = [[MTContext alloc] initWithSerialization:serialization encryptionProvider:[[EmptyEncryptionProvider alloc] init] apiEnvironment:apiEnvironment isTestingEnvironment:account.isTestingEnvironment useTempAuthKeys:true hint:@"fetchImage"];
     context.tempKeyExpiration = 10 * 60 * 60;
     
     NSDictionary *seedAddressList = @{};
@@ -157,7 +157,7 @@ dispatch_block_t fetchImage(BuildConfig *buildConfig, AccountProxyConnection * _
         [context updateAuthInfoForDatacenterWithId:[datacenterId intValue] authInfo:[[MTDatacenterAuthInfo alloc] initWithAuthKey:info.masterKey.data authKeyId:info.masterKey.keyId saltSet:@[] authKeyAttributes:@{}] selector:MTDatacenterAuthInfoSelectorPersistent];
     }
     
-    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0];
+    MTProto *mtProto = [[MTProto alloc] initWithContext:context datacenterId:datacenterId usageCalculationInfo:nil requiredAuthToken:nil authTokenMasterDatacenterId:0 hint:[NSString stringWithFormat:@"fetchImage %@", inputFileLocation]];
     mtProto.useTempAuthKeys = context.useTempAuthKeys;
     mtProto.checkForProxyConnectionIssues = false;
     

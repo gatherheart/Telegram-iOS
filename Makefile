@@ -71,6 +71,9 @@ BAZEL_OPT_FLAGS=\
 	--swiftcopt='-num-threads' --swiftcopt='0' \
     --objc_enable_binary_stripping \
 
+query_dot: check_env
+	$(BUCK) query \
+	"deps('//Telegram:Telegram', 3)" ${BUCK_OPTIONS} ${BUCK_DEBUG_OPTIONS} --output-format dot_bfs --output-file dependency_bfs.dot
 
 build_arm64: check_env
 	$(BUCK) build \

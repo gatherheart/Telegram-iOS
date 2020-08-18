@@ -34,7 +34,7 @@ private let redactFunctionParameters: [String: Set<String>] = [
 ]
 
 func apiFunctionDescription(of desc: FunctionDescription) -> String {
-    var result = desc.name
+    var result = "apiDescFunc \(desc.name)"
     if !desc.parameters.isEmpty {
         result.append("(")
         var first = true
@@ -55,7 +55,7 @@ func apiFunctionDescription(of desc: FunctionDescription) -> String {
             if redactParam, Logger.shared.redactSensitiveData {
                 result.append("[[redacted]]")
             } else {
-                result.append(recursiveDescription(redact: Logger.shared.redactSensitiveData, of: param.1))
+                result.append(recursiveDescription(redact: Logger.shared.redactSensitiveData, of: param.1, false))
             }
         }
         result.append(")")
@@ -64,12 +64,12 @@ func apiFunctionDescription(of desc: FunctionDescription) -> String {
 }
 
 func apiShortFunctionDescription(of desc: FunctionDescription) -> String {
-    return desc.name
+    return "apiDescShort: \(desc.name)"
 }
 
-private func recursiveDescription(redact: Bool, of value: Any) -> String {
+private func recursiveDescription(redact: Bool, of value: Any, _ isFirst: Bool=true) -> String {
     let mirror = Mirror(reflecting: value)
-    var result = ""
+    var result = isFirst ? "apiDescRecur: " : ""
     if let displayStyle = mirror.displayStyle {
         switch displayStyle {
             case .enum:
@@ -113,7 +113,7 @@ private func recursiveDescription(redact: Bool, of value: Any) -> String {
                             if redactValue {
                                 result.append("[[redacted]]")
                             } else {
-                                result.append(recursiveDescription(redact: redact, of: fieldValue))
+                                result.append(recursiveDescription(redact: redact, of: fieldValue, false))
                             }
                         }
                         result.append(")")
@@ -157,7 +157,7 @@ private func recursiveDescription(redact: Bool, of value: Any) -> String {
                                     if redactValue {
                                         result.append("[[redacted]]")
                                     } else {
-                                        result.append(recursiveDescription(redact: redact, of: child.value))
+                                        result.append(recursiveDescription(redact: redact, of: child.value, false))
                                     }
                                 }
                                 if hadChildren {
@@ -183,7 +183,7 @@ private func recursiveDescription(redact: Bool, of value: Any) -> String {
                     } else {
                         result.append(", ")
                     }
-                    result.append(recursiveDescription(redact: redact, of: child.value))
+                    result.append(recursiveDescription(redact: redact, of: child.value, false))
                 }
                 result.append("]")
             default:

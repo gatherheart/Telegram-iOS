@@ -82,7 +82,7 @@
 
 - (NSString *)description
 {
-    return [[NSString alloc] initWithFormat:@"%@://%@ (media: %@)", [_transportClass isEqual:[MTTcpTransport class]] ? @"tcp" : @"http", _address, _media ? @"yes" : @"no"];
+    return [[NSString alloc] initWithFormat:@"MTTransportScheme(%@://%@, media: %@)", [_transportClass isEqual:[MTTcpTransport class]] ? @"tcp" : @"http", _address, _media ? @"yes" : @"no"];
 }
 
 @end

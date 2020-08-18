@@ -341,12 +341,25 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
   ASDisplayNodeLogEvent(self, @"init");
 }
 
+static InstanceLifecycleTracker * __node_tracker = [[InstanceLifecycleTracker alloc] init];
+static InstanceLifecycleTracker * __auxiliary_tracker = [[InstanceLifecycleTracker alloc] init];
+
++ (InstanceLifecycleTracker *)sharedTracker {
+    return __node_tracker;
+}
+
++ (InstanceLifecycleTracker *)auxiliaryTracker {
+    return __auxiliary_tracker;
+}
+
 - (instancetype)init
 {
   if (!(self = [super init]))
     return nil;
 
   [self _initializeInstance];
+    
+    [__node_tracker initInvoked:[[self class] description]];
 
   return self;
 }
@@ -459,8 +472,14 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
   }
 }
 
++ (void) printStats:(NSString *)cmd {
+    [__node_tracker printStats:cmd];
+}
+
 - (void)dealloc
 {
+    [__node_tracker deallocInvoked:[[self class] description]];
+    
   _flags.isDeallocating = YES;
   [self baseWillDealloc];
 
@@ -3813,6 +3832,171 @@ static const char *ASDisplayNodeAssociatedNodeKey = "ASAssociatedNode";
     }
     [self addSublayer:subnode.layer];
   }
+}
+
+@end
+
+@interface InstanceLifecycleTracker () {
+    std::recursive_mutex _mutex;
+    // NSMutableDictionary * _initCounts;
+    // NSMutableDictionary * _liveCounts;
+    NSMutableDictionary<NSString *, NSNumber *> * _mtInitCounts;
+    NSMutableDictionary<NSString *, NSNumber *> * _mtDeallocCounts;
+    NSMutableDictionary<NSString *, NSNumber *> * _nmtInitCounts;
+    NSMutableDictionary<NSString *, NSNumber *> * _nmtDeallocCounts;
+    
+    int _mtInit;
+    int _nmtInit;
+    int _mtDealloc;
+    int _nmtDealloc;
+}
+
+@end
+
+static int _update_dict_count(NSMutableDictionary<NSString *, NSNumber *> * dict, NSString * key, int delta) {
+    int value = [[dict valueForKey:key] intValue];
+    value += delta;
+    dict[key] = @(value);
+    return value;
+}
+
+static int _get_count(NSDictionary<NSString *, NSNumber *> * dict, NSString * key) {
+    return [[dict valueForKey:key] intValue];
+}
+
+@implementation InstanceLifecycleTracker
+
+- (instancetype)init {
+    self = [super init];
+    
+    _mtInitCounts = [NSMutableDictionary dictionary];
+    _nmtInitCounts = [NSMutableDictionary dictionary];
+    _mtDeallocCounts = [NSMutableDictionary dictionary];
+    _nmtDeallocCounts = [NSMutableDictionary dictionary];
+    
+    return self;
+}
+
+- (void)initInvoked:(NSString *)name {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    
+    if (NSThread.isMainThread) {
+        _update_dict_count(_mtInitCounts, name, 1);
+        _mtInit += 1;
+        
+        [self _printBriefStats:name label:@"mt-init"];
+    } else {
+        _update_dict_count(_nmtInitCounts, name, 1);
+        _nmtInit += 1;
+        [self _printBriefStats:name label:@"nmt-init"];
+    }
+}
+
+- (void)deallocInvoked:(NSString *)name {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    
+    if (NSThread.isMainThread) {
+        _update_dict_count(_mtDeallocCounts, name, 1);
+        _mtDealloc += 1;
+        
+        [self _printBriefStats:name label:@"mt-dealloc"];
+    } else {
+        _update_dict_count(_nmtDeallocCounts, name, 1);
+        _nmtDealloc += 1;
+        
+        [self _printBriefStats:name label:@"nmt-dealloc"];
+    }
+}
+
+- (void)_printBriefStats:(NSString *)key label:(NSString *)label {
+    NSMutableString * statsString = [NSMutableString stringWithFormat:@"\tbrief total live %d, init %d (%d, %d), dealloc %d (%d, %d)",
+                                     _mtInit + _nmtInit - _mtDealloc - _nmtDealloc,
+                                     _mtInit + _nmtInit,
+                                     _mtInit,
+                                     _nmtInit,
+                                     _mtDealloc + _nmtDealloc,
+                                     _mtDealloc,
+                                     _nmtDealloc];
+    [statsString appendFormat:@"\n\tbrief %@, init %d (%d, %d), dealloc %d(%d, %d)",
+     key,
+     _get_count(_mtInitCounts, key) + _get_count(_nmtInitCounts, key),
+     _get_count(_mtInitCounts, key),
+     _get_count(_nmtInitCounts, key),
+     _get_count(_mtDeallocCounts, key) + _get_count(_nmtDeallocCounts, key),
+     _get_count(_mtDeallocCounts, key),
+     _get_count(_nmtDeallocCounts, key)];
+
+    NSLog(@"brief life stats %@ - %@:\n%@", label, key, statsString);
+}
+
+- (void)printStats:(NSString *)cmd {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    
+    NSMutableDictionary<NSString *, NSNumber *> * liveCounts = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString *, NSNumber *> * initCounts = [NSMutableDictionary dictionary];
+    
+    [_mtInitCounts enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSNumber * _Nonnull obj, BOOL * _Nonnull stop) {
+        _update_dict_count(liveCounts, key, obj.intValue);
+        _update_dict_count(initCounts, key, obj.intValue);
+    }];
+    
+    [_nmtInitCounts enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSNumber * _Nonnull obj, BOOL * _Nonnull stop) {
+        _update_dict_count(liveCounts, key, obj.intValue);
+        _update_dict_count(initCounts, key, obj.intValue);
+    }];
+    
+    [_mtDeallocCounts enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSNumber * _Nonnull obj, BOOL * _Nonnull stop) {
+        _update_dict_count(liveCounts, key, -obj.intValue);
+    }];
+    
+    [_nmtDeallocCounts enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSNumber * _Nonnull obj, BOOL * _Nonnull stop) {
+        _update_dict_count(liveCounts, key, -obj.intValue);
+    }];
+    
+    int top = 20;
+    
+    NSString * filter = @"";
+    
+    if (cmd.intValue > 0)
+        top = cmd.intValue;
+    else
+        filter = cmd;
+        
+    NSLog(@"brief %@ top-%d live counts with filter(%@): %@", [self class], top, filter, [self _collect_top_counts:liveCounts top:top filter:filter]);
+    NSLog(@"brief %@ top-%d init counts with filter(%@): %@", [self class], top, filter, [self _collect_top_counts:initCounts top:top filter:filter]);
+}
+
+- (NSString *)_collect_top_counts:(NSDictionary *)dict top:(int)top filter:(NSString *)filter {
+    NSMutableString * debugString = [NSMutableString string];
+    
+    NSArray<NSString *> * keys = [dict keysSortedByValueUsingComparator:^NSComparisonResult(NSNumber *  _Nonnull obj1, NSNumber *  _Nonnull obj2) {
+        return [obj2 compare:obj1];
+    }];
+    
+    int __block matched = 0;
+    [keys enumerateObjectsUsingBlock:^(NSString * _Nonnull key, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (matched >= top) {
+            *stop = TRUE;
+            return;
+        }
+        
+        if (filter.length == 0 || [key rangeOfString:filter options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            [debugString appendFormat:@"\nbrief #%d\t%d: %@, init %d (%d, %d), dealloc %d(%d, %d)",
+             idx,
+             _get_count(dict, key),
+             key,
+             _get_count(_mtInitCounts, key) + _get_count(_nmtInitCounts, key),
+             _get_count(_mtInitCounts, key),
+             _get_count(_nmtInitCounts, key),
+             _get_count(_mtDeallocCounts, key) + _get_count(_nmtDeallocCounts, key),
+             _get_count(_mtDeallocCounts, key),
+             _get_count(_nmtDeallocCounts, key)
+             ];
+            matched += 1;
+        }
+    }];
+    
+    return [debugString copy];
 }
 
 @end

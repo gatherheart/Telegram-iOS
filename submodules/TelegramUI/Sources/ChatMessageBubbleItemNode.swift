@@ -533,8 +533,14 @@ class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewItemNode
             }
             strongSelf.applyAbsoluteOffsetSpringInternal(value: value, duration: duration, damping: damping)
         }
+
+        ChatMessageBubbleItemNode.instance_id += 1
+        //self.backgroundColor = ChatMessageBubbleItemNode.bg_colors[ChatMessageBubbleItemNode.instance_id % ChatMessageBubbleItemNode.bg_colors.count]
     }
-    
+
+    static var instance_id = 0
+    static let bg_colors: [UIColor] = [UIColor.red, UIColor.blue, UIColor.green]
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -1185,10 +1191,12 @@ class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewItemNode
                 if currentClass == contentNodeClass && currentMessage.stableId == contentNodeMessage.stableId {
                     contentPropertiesAndPrepareLayouts.append((contentNodeMessage, supportsMosaic, attributes, bubbleAttributes, currentLayout))
                     found = true
+                    ASDisplayNode.auxiliaryTracker().deallocInvoked("beginLayout-found")
                     break
                 }
             }
             if !found {
+                ASDisplayNode.auxiliaryTracker().initInvoked("beginLayout-found")
                 let contentNode = (contentNodeClass as! ChatMessageBubbleContentNode.Type).init()
                 contentPropertiesAndPrepareLayouts.append((contentNodeMessage, contentNode.supportsMosaic, attributes, bubbleAttributes, contentNode.asyncLayoutContent()))
                 if addedContentNodes == nil {

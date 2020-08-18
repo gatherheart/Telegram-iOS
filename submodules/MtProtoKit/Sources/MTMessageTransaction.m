@@ -1,6 +1,7 @@
 #import <MtProtoKit/MTMessageTransaction.h>
 
 #import <MtProtoKit/MTInternalId.h>
+#import <MtProtoKit/MTLogging.h>
 
 MTInternalIdClass(MTMessageTransaction)
 
@@ -18,7 +19,14 @@ MTInternalIdClass(MTMessageTransaction)
         _prepared = [prepared copy];
         _failed = [failed copy];
     }
+    
+    MTLog(@"%@: new instance", self);
+    
     return self;
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTMessageTransaction#%p(%@, messagePayload %@)", self, _internalId, _messagePayload];
 }
 
 @end

@@ -9,8 +9,8 @@
 @property (nonatomic) bool scheduledForCleanup;
 @property (nonatomic) bool canBeDeleted;
 
-- (instancetype)initWithRandomSessionIdAndContext:(MTContext *)context;
-- (instancetype)initWithSessionId:(int64_t)sessionId context:(MTContext *)context;
+- (instancetype)initWithRandomSessionIdAndContext:(MTContext *)context hint:(NSString *)hint;
+- (instancetype)initWithSessionId:(int64_t)sessionId context:(MTContext *)context hint:(NSString *)hint;
 
 - (int64_t)sessionId;
 - (int64_t)generateClientMessageId:(bool *)monotonityViolated;

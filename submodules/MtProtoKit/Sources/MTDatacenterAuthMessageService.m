@@ -168,6 +168,10 @@ typedef enum {
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"MTDatacenterAuthMessageService#%p(stage %@, _currentStageMessageId %@, _currentStageMessageSeqNo %@, _currentStageTransactionId %@)", self, @(_stage), @(_currentStageMessageId), @(_currentStageMessageSeqNo), _currentStageTransactionId];
+}
+
 - (void)reset:(MTProto *)mtProto
 {
     _currentStageMessageId = 0;

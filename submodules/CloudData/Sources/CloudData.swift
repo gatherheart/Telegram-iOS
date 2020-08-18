@@ -19,6 +19,7 @@ private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
         let container = CKContainer.default()
         let publicDatabase = container.database(with: .public)
         let recordId = CKRecord.ID(recordName: "emergency-datacenter-\(prefix)")
+        print("fetching cloud CKRecord: \(recordId.recordName)")
         publicDatabase.fetch(withRecordID: recordId, completionHandler: { record, error in
             if let error = error {
                 print("publicDatabase.fetch error: \(error)")
