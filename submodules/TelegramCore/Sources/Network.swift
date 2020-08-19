@@ -888,7 +888,7 @@ public final class Network: NSObject, MTRequestMessageServiceDelegate {
         self.loggedOut?()
     }
     
-    func download(datacenterId: Int, isMedia: Bool, isCdn: Bool = false, tag: MediaResourceFetchTag?, hint: String) -> Signal<Download, NoError> {
+    func download(datacenterId: Int, isMedia: Bool, isCdn: Bool = false, tag: MediaResourceFetchTag?, hint: String = #function) -> Signal<Download, NoError> {
         return self.worker(datacenterId: datacenterId, isCdn: isCdn, isMedia: isMedia, tag: tag, hint: "download(\(hint))")
     }
     

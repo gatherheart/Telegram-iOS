@@ -14,17 +14,17 @@ import AccountContext
 private let savedMessagesAvatar: UIImage = {
     return generateImage(CGSize(width: 60.0, height: 60.0), rotatedContext: { size, context in
         var locations: [CGFloat] = [1.0, 0.0]
-               
+
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let gradient = CGGradient(colorsSpace: colorSpace, colors: [UIColor(rgb: 0x2a9ef1).cgColor, UIColor(rgb: 0x72d5fd).cgColor] as CFArray, locations: &locations)!
-               
+
         context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
-        
+
         let factor = size.width / 60.0
         context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
         context.scaleBy(x: factor, y: -factor)
         context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-        
+
         if let savedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/SavedMessagesIcon"), color: .white) {
             context.draw(savedMessagesIcon.cgImage!, in: CGRect(origin: CGPoint(x: floor((size.width - savedMessagesIcon.size.width) / 2.0), y: floor((size.height - savedMessagesIcon.size.height) / 2.0)), size: savedMessagesIcon.size))
         }

@@ -41,6 +41,7 @@ private final class PointerInteractionImpl: NSObject, UIPointerInteractionDelega
     
     func pointerInteraction(_ interaction: UIPointerInteraction, styleFor region: UIPointerRegion) -> UIPointerStyle? {
         var pointerStyle: UIPointerStyle? = nil
+        /*
         if let interactionView = interaction.view {
             let targetedPreview = UITargetedPreview(view: interactionView)
             switch self.style {
@@ -63,6 +64,7 @@ private final class PointerInteractionImpl: NSObject, UIPointerInteractionDelega
                     pointerStyle = UIPointerStyle(effect: .hover(targetedPreview, preferredTintMode: .none, prefersShadow: false, prefersScaledContent: false))
             }
         }
+         */
         return pointerStyle
     }
 

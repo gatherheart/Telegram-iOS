@@ -1,6 +1,6 @@
 #import <SSignalKit/SSignalKit.h>
 
-@protocol TGMediaSelectableItem
+@protocol TGMediaSelectableItem <NSObject>
 
 @property (nonatomic, readonly) NSString *uniqueIdentifier;
 

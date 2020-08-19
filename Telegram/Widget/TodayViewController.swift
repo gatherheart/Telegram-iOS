@@ -77,6 +77,7 @@ class TodayViewController: UIViewController, NCWidgetProviding {
         self.view.addSubview(placeholderLabel)
     }
     
+    @available(iOSApplicationExtension 10.0, *)
     func widgetPerformUpdate(completionHandler: (@escaping (NCUpdateResult) -> Void)) {
         completionHandler(.newData)
     }
