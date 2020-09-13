@@ -5,6 +5,26 @@
 #import <MtProtoKit/MtProtoKit.h>
 #include <memory>
 
+#import "os/darwin/SetupLogging.h"
+
+static void (*ongoingCallBridgingTrace)(NSString *, NSString *, NSString *, NSString *, int);
+static void OngoingCallTGLoggingFunction(const char * filename, const char * functionName, int lineNumber, NSString *format, va_list args) {
+    if (ongoingCallBridgingTrace) {
+        ongoingCallBridgingTrace(
+                      @"VOIP",
+                      [[NSString alloc] initWithFormat:format arguments:args],
+                      [[NSString alloc] initWithBytesNoCopy:(void *)filename length:strlen(filename) encoding:NSUTF8StringEncoding freeWhenDone:NO],
+                      [[NSString alloc] initWithBytesNoCopy:(void *)functionName length:strlen(functionName) encoding:NSUTF8StringEncoding freeWhenDone:NO],
+                      lineNumber
+                      );
+    }
+}
+
+void setOngoingCallBridgingTraceFunction(void (*f)(NSString *, NSString *, NSString *, NSString *, int)) {
+    ongoingCallBridgingTrace = f;
+    TGVoipLoggingFunction = &OngoingCallTGLoggingFunction;
+}
+
 static void TGCallAesIgeEncrypt(uint8_t *inBytes, uint8_t *outBytes, size_t length, uint8_t *key, uint8_t *iv) {
     MTAesEncryptRaw(inBytes, outBytes, length, key, iv);
 }
