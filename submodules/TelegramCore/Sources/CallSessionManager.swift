@@ -450,6 +450,8 @@ private final class CallSessionManagerContext {
         if self.contextIdByStableId[stableId] != nil {
             return nil
         }
+
+        Logger.shared.log("VOIP", "peerId \(peerId), stableId \(stableId), accessHash \(accessHash), timestamp \(timestamp), versions \(versions), isVideo \(isVideo)")
         
         let bBytes = malloc(256)!
         let randomStatus = SecRandomCopyBytes(nil, 256, bBytes.assumingMemoryBound(to: UInt8.self))

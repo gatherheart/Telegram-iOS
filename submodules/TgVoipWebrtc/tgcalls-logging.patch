@@ -1,0 +1,65 @@
+diff --git a/tgcalls/InstanceImpl.cpp b/tgcalls/InstanceImpl.cpp
+index 054a396..497daba 100644
+--- a/tgcalls/InstanceImpl.cpp
++++ b/tgcalls/InstanceImpl.cpp
+@@ -26,9 +26,9 @@ rtc::Thread *getManagerThread() {
+ 
+ InstanceImpl::InstanceImpl(Descriptor &&descriptor)
+ : _logSink(std::make_unique<LogSinkImpl>(descriptor.config)) {
+-    rtc::LogMessage::LogToDebug(rtc::LS_INFO);
++    rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
+     rtc::LogMessage::SetLogToStderr(false);
+-	rtc::LogMessage::AddLogToStream(_logSink.get(), rtc::LS_INFO);
++	rtc::LogMessage::AddLogToStream(_logSink.get(), rtc::LS_VERBOSE);
+     
+     auto networkType = descriptor.initialNetworkType;
+ 
+diff --git a/tgcalls/LogSinkImpl.cpp b/tgcalls/LogSinkImpl.cpp
+index 77755c3..f49bb54 100644
+--- a/tgcalls/LogSinkImpl.cpp
++++ b/tgcalls/LogSinkImpl.cpp
+@@ -11,6 +11,21 @@
+ 
+ namespace tgcalls {
+ 
++std::string _everityString(rtc::LoggingSeverity severity) {
++    switch (severity) {
++        case rtc::LS_VERBOSE:
++            return "[V]";
++        case rtc::LS_INFO:
++            return "[I]";
++        case rtc::LS_WARNING:
++            return "[W]";
++        case rtc::LS_ERROR:
++            return "[E]";
++        default:
++            return "";
++    }
++}
++
+ LogSinkImpl::LogSinkImpl(const Config &config) {
+ 	if (!config.logPath.empty()) {
+ 		_file.open(config.logPath);
+@@ -18,11 +33,11 @@ LogSinkImpl::LogSinkImpl(const Config &config) {
+ }
+ 
+ void LogSinkImpl::OnLogMessage(const std::string &msg, rtc::LoggingSeverity severity, const char *tag) {
+-	OnLogMessage(std::string(tag) + ": " + msg);
++	OnLogMessage(std::string(tag) + ": " + _everityString(severity) + " " + msg);
+ }
+ 
+ void LogSinkImpl::OnLogMessage(const std::string &message, rtc::LoggingSeverity severity) {
+-	OnLogMessage(message);
++	OnLogMessage(_everityString(severity) + " " + message);
+ }
+ 
+ void LogSinkImpl::OnLogMessage(const std::string &message) {
+@@ -66,7 +81,7 @@ void LogSinkImpl::OnLogMessage(const std::string &message) {
+ 		<< " " << message;
+     
+ #if DEBUG
+-    printf("%d-%d-%d %d:%d:%d:%d %s\n", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, milliseconds, message.c_str());
++    printf("%d-%d-%d %d:%d:%d:%d (VOIP) %s\n", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, milliseconds, message.c_str());
+ #endif
+ }
+ 

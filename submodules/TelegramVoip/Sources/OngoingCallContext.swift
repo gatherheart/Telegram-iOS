@@ -607,6 +607,8 @@ public final class OngoingCallContext {
         let queue = self.queue
         
         cleanupCallLogs(account: account)
+
+        Logger.shared.log("VOIP", "internalId \(internalId), proxyServer \(proxyServer), initialNetworkType \(initialNetworkType), dataSaving \(dataSaving), isOutgoing \(isOutgoing), connections \(connections), maxLayer \(maxLayer), version \(version), allowP2P \(allowP2P), enableTCP \(enableTCP), enableStunMarking \(enableStunMarking), preferredVideoCodec \(preferredVideoCodec), logPath \(logPath)")
         
         self.audioSessionDisposable.set((audioSessionActive
         |> filter { $0 }
@@ -614,6 +616,7 @@ public final class OngoingCallContext {
         |> deliverOn(queue)).start(next: { [weak self] _ in
             if let strongSelf = self {
                 if OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: true).contains(version) {
+                    Logger.shared.log("VOIP", "use webrtc context")
                     var voipProxyServer: VoipProxyServerWebrtc?
                     if let proxyServer = proxyServer {
                         switch proxyServer.connection {
@@ -714,6 +717,9 @@ public final class OngoingCallContext {
                             break
                         }
                     }
+
+                    Logger.shared.log("VOIP", "use normal context")
+
                     let context = OngoingCallThreadLocalContext(queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, networkType: ongoingNetworkTypeForType(initialNetworkType), dataSaving: ongoingDataSavingForType(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescription(connections.primary)!, alternativeConnections: connections.alternatives.compactMap(callConnectionDescription), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath)
                     
                     strongSelf.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
