@@ -313,6 +313,7 @@ private final class CallSessionManagerContext {
         self.maxLayer = maxLayer
         self.versions = versions.reversed()
         self.addUpdates = addUpdates
+        Logger.shared.log("VOIP", "new context: maxLayer \(maxLayer), versions \(versions)")
     }
     
     deinit {
@@ -940,7 +941,7 @@ public final class CallSessionManager {
     deinit {
         let contextRef = self.contextRef
         self.queue.async {
-            contextRef?.release()
+            contextRef?.release() // make the context deallocated in the same queue
         }
     }
     

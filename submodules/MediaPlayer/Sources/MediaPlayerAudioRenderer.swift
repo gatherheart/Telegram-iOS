@@ -552,7 +552,7 @@ private final class AudioPlayerRendererContext {
                 return
             }
             
-            print("\(CFAbsoluteTimeGetCurrent()) MediaPlayerAudioRenderer start audio unit: \((CFAbsoluteTimeGetCurrent() - startTime) * 1000.0) ms")
+            Logger.shared.log("AudioPlayerRenderer", "\(CFAbsoluteTimeGetCurrent()) MediaPlayerAudioRenderer start audio unit: \((CFAbsoluteTimeGetCurrent() - startTime) * 1000.0) ms")
         }
     }
     

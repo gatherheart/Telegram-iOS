@@ -7,7 +7,7 @@
 
 #import "Instance.h"
 #import "InstanceImpl.h"
-#import "reference/InstanceImplReference.h"
+//#import "reference/InstanceImplReference.h"
 
 #import "VideoCaptureInterface.h"
 
@@ -572,6 +572,24 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
     if (completion) {
         if (terminationResult) {
             NSString *debugLog = [NSString stringWithUTF8String:terminationResult.finalState.debugLog.c_str()];
+
+            NSMutableString * statsLog = [[NSMutableString alloc] initWithFormat:@" CallStatscodec: video-codec %s, ", terminationResult.finalState.callStats.outgoingCodec.c_str()];
+            [statsLog appendString:@"networkRecords "];
+            for (auto &i : terminationResult.finalState.callStats.networkRecords) {
+                [statsLog appendFormat:@"(ts %d, type %d, lowcost %d) ", i.timestamp, i.endpointType, i.isLowCost];
+            }
+            [statsLog appendString:@"bitrateRecords "];
+            for (auto &i : terminationResult.finalState.callStats.bitrateRecords) {
+                [statsLog appendFormat:@"(ts %d, send-bitrate %d, recv %d, pacer_delay %d, rtt %d) ", i.timestamp, i.sendBitrate, i.recvBitrate, i.pacer_delay_ms, i.rtt_ms];
+            }
+
+            [statsLog appendString:@", PersistentState "];
+            for (auto i : terminationResult.finalState.persistentState.value) {
+                [statsLog appendFormat:@"(%d) ", i];
+            }
+
+            NSLog(@"(VOIP) stopWithTerminationResult: %@. TrafficStats(%lld, %lld, %lld, %lld) Stats %@", debugLog, terminationResult.finalState.trafficStats.bytesSentWifi, terminationResult.finalState.trafficStats.bytesReceivedWifi, terminationResult.finalState.trafficStats.bytesSentMobile, terminationResult.finalState.trafficStats.bytesReceivedMobile, statsLog);
+
             
             if (completion) {
                 completion(debugLog, terminationResult.finalState.trafficStats.bytesSentWifi, terminationResult.finalState.trafficStats.bytesReceivedWifi, terminationResult.finalState.trafficStats.bytesSentMobile, terminationResult.finalState.trafficStats.bytesReceivedMobile);

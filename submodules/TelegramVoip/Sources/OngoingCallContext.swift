@@ -616,7 +616,7 @@ public final class OngoingCallContext {
         |> deliverOn(queue)).start(next: { [weak self] _ in
             if let strongSelf = self {
                 if OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: true).contains(version) {
-                    Logger.shared.log("VOIP", "use webrtc context")
+                    Logger.shared.log("VOIP", "use context of webrtc")
                     var voipProxyServer: VoipProxyServerWebrtc?
                     if let proxyServer = proxyServer {
                         switch proxyServer.connection {
@@ -718,7 +718,7 @@ public final class OngoingCallContext {
                         }
                     }
 
-                    Logger.shared.log("VOIP", "use normal context")
+                    Logger.shared.log("VOIP", "use context of legacy")
 
                     let context = OngoingCallThreadLocalContext(queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, networkType: ongoingNetworkTypeForType(initialNetworkType), dataSaving: ongoingDataSavingForType(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescription(connections.primary)!, alternativeConnections: connections.alternatives.compactMap(callConnectionDescription), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath)
                     

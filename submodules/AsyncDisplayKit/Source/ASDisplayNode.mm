@@ -3926,7 +3926,7 @@ static int _get_count(NSDictionary<NSString *, NSNumber *> * dict, NSString * ke
      _get_count(_mtDeallocCounts, key),
      _get_count(_nmtDeallocCounts, key)];
 
-    NSLog(@"brief life stats %@ - %@:\n%@", label, key, statsString);
+    //NSLog(@"brief life stats %@ - %@:\n%@", label, key, statsString);
 }
 
 - (void)printStats:(NSString *)cmd {
