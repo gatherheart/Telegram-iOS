@@ -7,6 +7,19 @@ git imerge rebase upstream/master
 git imerge simplify --goal=rebase
 ```
 
-submodules/TgVoip/libtgvoip
-submodules/TgVoipWebrtc/tgcalls
-third-party/webrtc/webrtc-ios
+# Patch submodules
+
+```
+# update patch
+git diff --submodule=diff > submodules.patch
+
+git apply submodules.patch
+
+#reset
+git submodule foreach git reset --hard 
+```
+
+**Patched submodules**:
+- submodules/TgVoip/libtgvoip
+- submodules/TgVoipWebrtc/tgcalls
+- third-party/webrtc/webrtc-ios
