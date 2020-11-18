@@ -1,5 +1,5 @@
 diff --git a/tgcalls/InstanceImpl.cpp b/tgcalls/InstanceImpl.cpp
-index 054a396..497daba 100644
+index 0abdecd..9bd58ea 100644
 --- a/tgcalls/InstanceImpl.cpp
 +++ b/tgcalls/InstanceImpl.cpp
 @@ -26,9 +26,9 @@ rtc::Thread *getManagerThread() {
@@ -63,3 +63,43 @@ index 77755c3..f49bb54 100644
  #endif
  }
  
+diff --git a/tgcalls/MediaManager.cpp b/tgcalls/MediaManager.cpp
+index 2b3f580..3c57abb 100644
+--- a/tgcalls/MediaManager.cpp
++++ b/tgcalls/MediaManager.cpp
+@@ -388,7 +388,16 @@ void MediaManager::collectStats() {
+ 		_signalBarsUpdated((int)(adjustedQuality * signalBarsNorm));
+ 	}
+ 
+-    _bitrateRecords.push_back(CallStatsBitrateRecord { (int32_t)(rtc::TimeMillis() / 1000), stats.send_bandwidth_bps / 1000 });
++    _bitrateRecords.push_back(CallStatsBitrateRecord {
++        .timestamp=(int32_t)(rtc::TimeMillis() / 1000),
++        .bitrate=stats.send_bandwidth_bps / 1000,
++        // bo hack, log more stats
++        .send_bandwidth_bps = stats.send_bandwidth_bps,       // Estimated available send bandwidth.
++        .max_padding_bitrate_bps = stats.max_padding_bitrate_bps,  // Cumulative configured max padding.
++        .recv_bandwidth_bps = stats.recv_bandwidth_bps,       // Estimated available receive bandwidth.
++        .pacer_delay_ms = stats.pacer_delay_ms,
++        .rtt_ms = stats.rtt_ms
++    });
+ 
+     beginStatsTimer(2000);
+ }
+diff --git a/tgcalls/Stats.h b/tgcalls/Stats.h
+index fc0040b..f989ea4 100644
+--- a/tgcalls/Stats.h
++++ b/tgcalls/Stats.h
+@@ -17,6 +17,13 @@ struct CallStatsNetworkRecord {
+ struct CallStatsBitrateRecord {
+     int32_t timestamp = 0;
+     int32_t bitrate = 0;
++
++    // copied from webrtc::Call::Stats
++    int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
++    int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
++    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
++    int64_t pacer_delay_ms = 0;
++    int64_t rtt_ms = -1;
+ };
+ 
+ struct CallStats {

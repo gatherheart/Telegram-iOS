@@ -580,7 +580,7 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
             }
             [statsLog appendString:@"bitrateRecords "];
             for (auto &i : terminationResult.finalState.callStats.bitrateRecords) {
-                [statsLog appendFormat:@"(ts %d, send-bitrate %d, recv %d, pacer_delay %d, rtt %d) ", i.timestamp, i.sendBitrate, i.recvBitrate, i.pacer_delay_ms, i.rtt_ms];
+                [statsLog appendFormat:@"(ts %d, bitrate %d, send_bandwidth_bps %d, recv_bandwidth_bps %d, max_padding_bitrate_bps %d, pacer_delay_ms %d, rtt_ms %d) ", i.timestamp, i.bitrate, i.send_bandwidth_bps, i.recv_bandwidth_bps, i.max_padding_bitrate_bps, i.pacer_delay_ms, i.rtt_ms];
             }
 
             [statsLog appendString:@", PersistentState "];
