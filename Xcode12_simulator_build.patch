@@ -1,0 +1,98 @@
+diff --git a/Config/utils.bzl b/Config/utils.bzl
+index ca0271275..26570381c 100644
+--- a/Config/utils.bzl
++++ b/Config/utils.bzl
+@@ -50,6 +50,7 @@ SHARED_CONFIGS = {
+     "ONLY_ACTIVE_ARCH": "YES",
+     "LD_RUNPATH_SEARCH_PATHS": "@executable_path/Frameworks",
+     "ENABLE_BITCODE": "NO",
++    "DEAD_CODE_STRIPPING": "YES",
+ }
+ 
+ # Adding `-all_load` to our binaries works around https://bugs.swift.org/browse/SR-6004.
+diff --git a/submodules/Display/Source/PointerInteraction.swift b/submodules/Display/Source/PointerInteraction.swift
+index 3a60a7e02..f8204f92b 100644
+--- a/submodules/Display/Source/PointerInteraction.swift
++++ b/submodules/Display/Source/PointerInteraction.swift
+@@ -41,6 +41,7 @@ private final class PointerInteractionImpl: NSObject, UIPointerInteractionDelega
+     
+     func pointerInteraction(_ interaction: UIPointerInteraction, styleFor region: UIPointerRegion) -> UIPointerStyle? {
+         var pointerStyle: UIPointerStyle? = nil
++        /*
+         if let interactionView = interaction.view {
+             let targetedPreview = UITargetedPreview(view: interactionView)
+             switch self.style {
+@@ -63,6 +64,7 @@ private final class PointerInteractionImpl: NSObject, UIPointerInteractionDelega
+                     pointerStyle = UIPointerStyle(effect: .hover(targetedPreview, preferredTintMode: .none, prefersShadow: false, prefersScaledContent: false))
+             }
+         }
++         */
+         return pointerStyle
+     }
+ 
+diff --git a/third-party/mozjpeg/BUCK b/third-party/mozjpeg/BUCK
+index 379603ce4..708e0201f 100644
+--- a/third-party/mozjpeg/BUCK
++++ b/third-party/mozjpeg/BUCK
+@@ -48,7 +48,7 @@ genrule(
+     cp $BUILD_DIR/mozjpeg/jmorecfg.h "$OUT/Public/mozjpeg/"
+     cp $BUILD_DIR/build/jconfig.h "$OUT/Public/mozjpeg/"
+ 
+-    BUILD_ARCH="armv7"
++    BUILD_ARCH="x86_64"
+ 
+     BUILD_DIR="$OUT/$BUILD_ARCH"
+     rm -rf "$BUILD_DIR"
+@@ -62,8 +62,8 @@ genrule(
+ 
+     PATH="$PATH:$CMAKE_DIR/bin" sh $BUILD_DIR/build-mozjpeg-buck.sh $BUILD_ARCH "$BUILD_DIR/mozjpeg" "$BUILD_DIR"
+ 
+-    lipo -create $OUT/arm64/build/libjpeg.a $OUT/armv7/build/libjpeg.a -output $OUT/Public/lib/libjpeg.a
+-    lipo -create $OUT/arm64/build/libturbojpeg.a $OUT/armv7/build/libturbojpeg.a -output $OUT/Public/lib/libturbojpeg.a
++    lipo -create $OUT/arm64/build/libjpeg.a $OUT/x86_64/build/libjpeg.a -output $OUT/Public/lib/libjpeg.a
++    lipo -create $OUT/arm64/build/libturbojpeg.a $OUT/x86_64/build/libturbojpeg.a -output $OUT/Public/lib/libturbojpeg.a
+     """,
+     out = "libmozjpeg",
+     visibility = [
+diff --git a/third-party/webrtc/BUCK b/third-party/webrtc/BUCK
+index 6762598ed..28bd2f3bd 100644
+--- a/third-party/webrtc/BUCK
++++ b/third-party/webrtc/BUCK
+@@ -37,11 +37,11 @@ genrule(
+ 
+     sh $SRCDIR/build-webrtc-buck.sh "$BUILD_DIR" $BUILD_ARCH
+ 
+-    BUILD_ARCH=arm
++    BUILD_ARCH=x64
+ 
+-    BUILD_DIR_ARMV7="$SRCDIR/$BUILD_ARCH"
++    BUILD_DIR_X64="$SRCDIR/$BUILD_ARCH"
+ 
+-    BUILD_DIR="$BUILD_DIR_ARMV7"
++    BUILD_DIR="$BUILD_DIR_X64"
+ 
+     rm -rf "$BUILD_DIR"
+     mkdir -p "$BUILD_DIR"
+@@ -61,7 +61,7 @@ genrule(
+     sh $SRCDIR/build-webrtc-buck.sh "$BUILD_DIR" $BUILD_ARCH
+ 
+     mkdir -p "$OUT"
+-    lipo -create "$BUILD_DIR_ARMV7/webrtc-ios/src/out/ios/obj/sdk/libframework_objc_static.a" "$BUILD_DIR_ARM64/webrtc-ios/src/out/ios_64/obj/sdk/libframework_objc_static.a" -output "$OUT/libframework_objc_static.a"
++    lipo -create "$BUILD_DIR_X64/webrtc-ios/src/out/ios_sim/obj/sdk/libframework_objc_static.a" "$BUILD_DIR_ARM64/webrtc-ios/src/out/ios_64/obj/sdk/libframework_objc_static.a" -output "$OUT/libframework_objc_static.a"
+ """,
+     out = "libwebrtc",
+     visibility = ["PUBLIC"]
+Submodule third-party/webrtc/webrtc-ios contains modified content
+diff --git a/third-party/webrtc/webrtc-ios/src/build/mac/find_sdk.py b/third-party/webrtc/webrtc-ios/src/build/mac/find_sdk.py
+index 38c28832..44cb85c0 100755
+--- a/third-party/webrtc/webrtc-ios/src/build/mac/find_sdk.py
++++ b/third-party/webrtc/webrtc-ios/src/build/mac/find_sdk.py
+@@ -88,7 +88,7 @@ def main():
+     raise SdkError('Install Xcode, launch it, accept the license ' +
+       'agreement, and run `sudo xcode-select -s /path/to/Xcode.app` ' +
+       'to continue.')
+-  sdks = [re.findall('^MacOSX(10\.\d+)\.sdk$', s) for s in os.listdir(sdk_dir)]
++  sdks = [re.findall('^MacOSX(1[01]\.\d+)\.sdk$', s) for s in os.listdir(sdk_dir)]
+   sdks = [s[0] for s in sdks if s]  # [['10.5'], ['10.6']] => ['10.5', '10.6']
+   sdks = [s for s in sdks  # ['10.5', '10.6'] => ['10.6']
+           if parse_version(s) >= parse_version(min_sdk_version)]
